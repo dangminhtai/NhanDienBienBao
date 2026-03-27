@@ -1,79 +1,57 @@
 import os
+import sys
+
+# Đảm bảo có thể import src
+current_dir = os.path.dirname(os.path.abspath(__file__))
+streamlit_dir = os.path.dirname(current_dir)
+if streamlit_dir not in sys.path:
+    sys.path.append(streamlit_dir)
+
 import numpy as np
 import joblib
 from sklearn.preprocessing import StandardScaler
 from PIL import Image
-import sys
+from src.data_processor import extract_hybrid_features
 
-# Thêm thư mục hiện tại vào path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from src.data_utils import extract_hybrid_features
-
-def rebuild_scaler(train_dir, output_path, limit_per_class=20):
-    """
-    Tạo lại Scaler từ tập dữ liệu huấn luyện cục bộ.
-    """
-    print(f"Bắt đầu rebuild scaler từ: {train_dir}")
+def rebuild_scaler(train_dir, output_path, limit_per_class=30):
+    print(f"--- Rebuilding Scaler từ: {train_dir} ---")
     X_samples = []
     
-    # Duyệt qua các class
     for class_id in range(43):
         class_path = os.path.join(train_dir, str(class_id))
-        if not os.path.exists(class_path):
-            continue
-            
-        print(f"Lấy mẫu từ nhãn {class_id}...")
+        if not os.path.exists(class_path): continue
+        
+        print(f"Lấy mẫu lớp {class_id}...")
         count = 0
         try:
-            img_names = os.listdir(class_path)
-            # Lấy tối đa limit_per_class ảnh để tính toán scaler nhanh
-            for img_name in img_names:
+            for img_name in os.listdir(class_path):
                 if img_name.endswith(('.png', '.jpg', '.jpeg')):
-                    img_path = os.path.join(class_path, img_name)
-                    try:
-                        img = Image.open(img_path).convert('RGB')
-                        img = img.resize((32, 32))
-                        X_samples.append(np.array(img))
-                        count += 1
-                    except:
-                        continue
-                if count >= limit_per_class:
-                    break
-        except:
-            continue
+                    img = Image.open(os.path.join(class_path, img_name)).convert('RGB')
+                    X_samples.append(np.array(img.resize((32, 32))))
+                    count += 1
+                if count >= limit_per_class: break
+        except: continue
                 
     if not X_samples:
-        print(f"Không tìm thấy dữ liệu ảnh để rebuild scaler tại {train_dir}!")
+        print("Không tìm thấy dữ liệu!")
         return
-        
-    print(f"Tổng số mẫu thu thập: {len(X_samples)}")
-    print("Đang trích xuất đặc trưng Hybrid (HOG 4x4 + HSV)...")
+
+    print(f"Tổng mẫu: {len(X_samples)}. Trích xuất đặc trưng...")
     X_features = extract_hybrid_features(np.array(X_samples))
     
-    print(f"Shape đặc trưng: {X_features.shape}")
-    
-    print("Đang fit StandardScaler...")
+    print("Fitting Scaler...")
     scaler = StandardScaler()
     scaler.fit(X_features)
     
-    # Lưu scaler
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     joblib.dump(scaler, output_path)
-    print(f"Đã lưu scaler mới tại: {output_path}")
-    print(f"Số lượng đặc trưng chuẩn hóa: {scaler.n_features_in_}")
+    print(f"Hoàn tất! Đã lưu tại: {output_path}")
 
 if __name__ == "__main__":
-    # Đường dẫn mới: streamlit/dataset/Train/
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    train_path = os.path.join(base_dir, 'streamlit', 'dataset', 'Train')
-    
-    if not os.path.exists(train_path):
-        # Fallback về đường dẫn cũ nếu cần
-        train_path = os.path.join(base_dir, 'streamlit', 'Train')
-        
-    output_scaler = os.path.join(base_dir, 'streamlit', 'models', 'scaler_1812.joblib')
+    # Đường dẫn bám sát cấu trúc mới trong streamlit/
+    train_path = os.path.join(streamlit_dir, 'dataset', 'Train')
+    output_scaler = os.path.join(streamlit_dir, 'models', 'scaler_1812.joblib')
     
     if os.path.exists(train_path):
-        rebuild_scaler(train_path, output_scaler, limit_per_class=30)
+        rebuild_scaler(train_path, output_scaler)
     else:
-        print(f"CẢNH BÁO: Không tìm thấy thư mục Train tại {train_path}. Không thể rebuild scaler.")
+        print(f"Không tìm thấy dữ liệu Train tại {train_path}")
