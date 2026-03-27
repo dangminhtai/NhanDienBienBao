@@ -8,9 +8,12 @@
 | REQ004 | Tiền xử lý | Áp dụng CLAHE cho ảnh đầu vào. | Hoàn thành |
 | REQ005 | Giao diện Web | Triển khai bằng Streamlit với giao diện Premium. | Hoàn thành |
 | REQ006 | Hiệu suất | Response time < 2s cho mỗi lần dự đoán. | Hoàn thành |
+| REQ007 | Github Policy | Không tự động đẩy code lên Github trừ khi có yêu cầu. | Hoàn thành |
+| REQ008 | Minh bạch toán học | Giải thích quy trình dự đoán từ cơ sở toán học đến số liệu thực tế. | Đang thực hiện |
 
 ## Quy trình triển khai Step-by-step
 1. **Thiết lập môi trường**: Cài đặt dependencies từ `requirements.txt`.
 2. **Module trung tâm**: `src/data_utils.py` xử lý logic trích xuất đặc trưng 1812 chiều.
 3. **Scaler đồng bộ**: Chạy `src/rebuild_scaler.py` để tạo bộ chuẩn hóa tương thích mô hình.
 4. **App Deployment**: Khởi chạy `streamlit run streamlit/app.py`.
+5. **Github** Người dùng ko yêu cầu bạn (agent) đẩy code lên github cho các lần sau
