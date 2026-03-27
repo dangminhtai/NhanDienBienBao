@@ -14,3 +14,11 @@ Sau khi hoàn thiện phiên bản v2.0 sử dụng SVM và Hybrid Features, em 
 
 ## 4. Báo cáo thống kê
 - Thêm tính năng lưu lại lịch sử nhận diện và xuất báo cáo CSV/PDF cho người dùng.
+
+## 5. Tái cấu trúc dự án (Refactoring)
+- Hợp nhất `src/` và `streamlit/src/` để tránh dư thừa mã nguồn.
+- Triển khai file `config.yaml` để quản lý các tham số như `IMG_SIZE`, `MODEL_PATH`.
+
+## 6. Tối ưu hóa trải nghiệm (UX/Performance)
+- Sử dụng `st.cache_resource` để tối ưu tốc độ load mô hình.
+- Bổ sung nút "Clear" và hiển thị độ tin cậy của dự đoán.

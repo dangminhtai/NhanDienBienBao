@@ -11,3 +11,8 @@
 ## Triển khai (Deployment)
 - Luôn kiểm tra tính tương thích giữa `StandardScaler` và `Model` (số lượng đặc trưng `n_features_in_`).
 - Khi tích hợp mô hình từ bên ngoài, cần bám sát Notebook gốc để tái hiện đúng pipeline trích xuất đặc trưng.
+
+## Phân tích hệ thống (System Analysis)
+- **Tính minh bạch**: Một hệ thống AI tốt không chỉ đưa ra kết quả mà cần đi kèm với độ tin cậy (Confidence score) để người dùng có thể đánh giá mức độ chính xác.
+- **Tối ưu hóa tài nguyên**: Sử dụng cache (`st.cache_resource`, `st.cache_data`) là tối quan trọng trong các ứng dụng Web AI để tránh lãng phí tài nguyên tính toán.
+- **Cấu trúc SOLID**: Việc phân tách rõ ràng giữa logic giao diện (Streamlit) và logic xử lý (Service/Handler) giúp code dễ bảo trì hơn, nhưng cần tránh việc nhân bản code (redundancy).

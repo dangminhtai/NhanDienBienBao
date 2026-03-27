@@ -7,3 +7,6 @@
 | ISS003 | Giao diện Streamlit cơ bản, chưa chuyên nghiệp | Thiết kế lại UI với Custom CSS, Premium Theme. | Nâng cấp `streamlit/app.py` v2.0. |
 | ISS004 | Lỗi đường dẫn sau khi di chuyển tệp mô hình và dataset | Cập nhật `app.py` và `rebuild_scaler.py` bám sát cấu trúc mới. | Di chuyển logic load sang `streamlit/models/` và `dataset/`. |
 | ISS005 | Cảnh báo Streamlit về nhãn trống và tham số ảnh cũ | Cập nhật tham số `width` và thêm label ẩn cho file uploader. | Khắc phục xong các cảnh báo trong app.py v2.2. |
+| ISS006 | Chưa có cơ chế cache mô hình khiến app tải lại mỗi lần reload | Sử dụng `st.cache_resource` trong Streamlit. | Chưa thực hiện |
+| ISS007 | Thiếu độ tin cậy (Confidence score) trong kết quả | Nghiên cứu `predict_proba` của SVM. | Chưa thực hiện |
+| ISS008 | Cấu trúc thư mục chồng chéo (`src/` vs `streamlit/src/`) | Hợp nhất mã nguồn vào một thư mục `src/` duy nhất. | Chưa thực hiện |
