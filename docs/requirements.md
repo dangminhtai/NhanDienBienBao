@@ -9,7 +9,7 @@
 | REQ005 | Giao diện Web | Triển khai bằng Streamlit với giao diện Premium. | Hoàn thành |
 | REQ006 | Hiệu suất | Response time < 2s cho mỗi lần dự đoán. | Hoàn thành |
 | REQ007 | Github Policy | Không tự động đẩy code lên Github trừ khi có yêu cầu. | Hoàn thành |
-| REQ008 | Minh bạch toán học | Giải thích quy trình dự đoán từ cơ sở toán học đến số liệu thực tế. | Đang thực hiện |
+| REQ008 | Minh bạch toán học | Giải thích quy trình dự đoán từ cơ sở toán học đến số liệu thực tế. | Hoàn thành |
 
 ## Quy trình triển khai Step-by-step
 1. **Thiết lập môi trường**: Cài đặt dependencies từ `requirements.txt`.
