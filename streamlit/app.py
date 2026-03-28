@@ -48,7 +48,7 @@ def main():
     st.sidebar.title("🚦 Hệ thống Nhận diện")
     
     app_mode = st.sidebar.radio("Chọn chế độ hoạt động:", 
-                                ["Dự đoán nhanh (Single Sign)", "Phát hiện & Nhận diện (Full Image)"])
+                                ["Dự đoán nhanh (Single Sign)", "Phát hiện & Nhận diện (Full Image)", "Quét Thư mục (Batch Mode)"])
     
     st.sidebar.markdown("---")
     
@@ -80,106 +80,176 @@ def main():
         st.warning("⚠️ Hệ thống nhận diện đang thiếu thành phần. Vui lòng kiểm tra models/")
         return
 
-    # 2. Giao diện Upload
-    uploaded_file = st.file_uploader("📥 Chọn ảnh...", type=["jpg", "png", "jpeg"])
-
-    if uploaded_file:
-        image = Image.open(uploaded_file).convert("RGB")
+    # 2. Logic theo Chế độ hoạt động
+    if app_mode == "Quét Thư mục (Batch Mode)":
+        st.header("📂 Chế độ quét hàng loạt")
+        folder_path = st.text_input("Nhập đường dẫn thư mục ảnh:", value=r"f:\X-FILE\Code_UNI\Python\Math for AI\CuoiKy\NhanDienBienBao\TestIJCNN2013Download")
         
-        if app_mode == "Dự đoán nhanh (Single Sign)":
-            # Căn giữa ảnh bằng cột
-            row_col1, row_col2, row_col3 = st.columns([1, 1, 1])
-            with row_col2:
-                st.image(image, caption='Ảnh đã tải lên', width="stretch")
-            
-            if st.button("🔍 BẮT ĐẦU NHẬN DIỆN"):
-                with st.spinner('Đang phân tích...'):
-                    img_batch = preprocess_image_for_cnn(image)
-                    prediction_id, confidence = predict_hybrid(img_batch, cnn_extractor, rec_scaler, svm_model)
-                    result_name = class_names.get(prediction_id, "Không xác định")
-
-                    st.markdown(f"""
-                        <div class="prediction-card">
-                            <div class="result-title">KẾT QUẢ PHÂN TÍCH HYBRID</div>
-                            <div class="result-name">{result_name}</div>
-                            <div class="label-id">NHÃN: #{prediction_id} | ĐỘ TIN CẬY: {confidence:.2f}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    st.balloons()
-
-        else: # Phát hiện & Nhận diện (Full Image)
-            # Load Detection Models
-            det_model, det_scaler = load_detection_system()
-            if det_model is not None and det_scaler is not None:
+        if st.button("🚀 BẮT ĐẦU QUÉT THƯ MỤC"):
+            if os.path.isdir(folder_path):
+                from src.batch_processor import BatchProcessor
+                
+                det_model, det_scaler = load_detection_system()
                 detector = TrafficSignDetector(
                     model_path=os.path.join(current_dir, "models", "detect_model.pkl"),
                     scaler_path=os.path.join(current_dir, "models", "detect_scaler.pkl")
                 )
                 
-                if st.button("🚀 BẮT ĐẦU QUÉT TOÀN CẢNH"):
-                    import time
-                    start_time = time.time()
-                    with st.spinner('Đang thực hiện quét đa sắc...'):
-                        # Chuyển PIL sang OpenCV BGR
-                        img_bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-                        boxes, mask = detector.detect(
-                            img_bgr, 
-                            min_s=det_params['min_s'], 
-                            min_v=det_params['min_v'],
-                            min_size=det_params['min_size'],
-                            return_mask=True,
-                            auto_tune=auto_tune
-                        )
-                        
-                        elapsed_time = time.time() - start_time
-                        
-                        if show_debug:
-                            st.subheader("🔍 Mặt nạ quét màu (Mask)")
-                            st.image(mask, caption='Vùng màu trắng là nơi OpenCV đang tìm kiếm biển báo', width="stretch")
-                        
-                        if not boxes:
-                            st.warning(f"Không tìm thấy biển báo nào (Thời gian quét: {elapsed_time:.2f}s). Hãy thử giảm Saturation/Value.")
-                        else:
-                            st.success(f"Tìm thấy {len(boxes)} biển báo trong {elapsed_time:.2f} giây!")
-                            
-                            # Vẽ và nhận diện
-                            display_pil = image.copy()
-                            results = []
-                            
-                            for i, box in enumerate(boxes):
-                                x, y, w, h = box
-                                # Crop và nhận diện bằng Hybrid CNN-SVM
-                                roi = img_bgr[y:y+h, x:x+w]
-                                roi_pil = Image.fromarray(cv2.cvtColor(roi, cv2.COLOR_BGR2RGB))
-                                
-                                img_batch = preprocess_image_for_cnn(roi_pil)
-                                pred_id, conf = predict_hybrid(img_batch, cnn_extractor, rec_scaler, svm_model)
-                                label = class_names.get(pred_id, "Không xác định")
-                                
-                                results.append({
-                                    "box": (x, y, w, h),
-                                    "label": label,
-                                    "id": pred_id,
-                                    "conf": conf
-                                })
-                                
-                                # Vẽ lên ảnh PIL bằng hàm hỗ trợ tiếng Việt
-                                draw = ImageDraw.Draw(display_pil)
-                                draw.rectangle([x, y, x+w, y+h], outline=(0, 255, 0), width=3)
-                                display_pil = draw_vietnamese_text(display_pil, label, (x, y-25))
+                def classifier_wrapper(roi_bgr):
+                    roi_pil = Image.fromarray(cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2RGB))
+                    img_batch = preprocess_image_for_cnn(roi_pil)
+                    pred_id, conf = predict_hybrid(img_batch, cnn_extractor, rec_scaler, svm_model)
+                    return pred_id, conf
 
-                            # Hiển thị ảnh kết quả
-                            st.image(display_pil, caption='Kết quả phát hiện v4.1', width="stretch")
+                processor = BatchProcessor(detector, classifier_wrapper)
+                
+                files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                
+                all_results = []
+                found_count = 0
+                
+                start_batch = time.time()
+                for i, filename in enumerate(files):
+                    status_text.text(f"Đang quét ({i+1}/{len(files)}): {filename}")
+                    img_path = os.path.join(folder_path, filename)
+                    image_bgr = cv2.imread(img_path)
+                    if image_bgr is None: continue
+                    
+                    boxes = detector.detect(image_bgr, 
+                                         min_s=det_params.get('min_s', 80), 
+                                         min_v=det_params.get('min_v', 80), 
+                                         min_size=det_params.get('min_size', 30),
+                                         auto_tune=auto_tune)
+                    
+                    if boxes:
+                        found_count += 1
+                        detections = []
+                        for box in boxes:
+                            x, y, w, h = box
+                            pred_id, conf = classifier_wrapper(image_bgr[y:y+h, x:x+w])
+                            detections.append({
+                                'box': box,
+                                'id': pred_id,
+                                'label': class_names.get(pred_id, "Unknown"),
+                                'conf': conf
+                            })
+                        all_results.append({'filename': filename, 'path': img_path, 'detections': detections})
+                    
+                    progress_bar.progress((i + 1) / len(files))
+                
+                end_batch = time.time()
+                st.success(f"✅ Quét xong {len(files)} ảnh trong {end_batch - start_batch:.2f} giây!")
+                st.info(f"Tìm thấy biển báo trong {found_count} ảnh.")
+                
+                if all_results:
+                    st.subheader("🖼️ Kết quả chi tiết:")
+                    for res in all_results:
+                        with st.expander(f"File: {res['filename']} - Tìm thấy {len(res['detections'])} biển báo"):
+                            img_res = cv2.imread(res['path'])
+                            for det in res['detections']:
+                                x, y, w, h = det['box']
+                                cv2.rectangle(img_res, (x, y), (x+w, y+h), (0, 255, 0), 5)
+                                result_text = f"{det['label']} ({det['conf']:.1f}%)"
+                                cv2.putText(img_res, result_text, (x, y-10), 
+                                            cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
+                            st.image(cv2.cvtColor(img_res, cv2.COLOR_BGR2RGB), use_container_width=True)
+            else:
+                st.error("Đường dẫn không tồn tại!")
+
+    else:
+        # Chế độ ảnh đơn (Upload)
+        uploaded_file = st.file_uploader("📥 Chọn ảnh...", type=["jpg", "png", "jpeg"])
+
+        if uploaded_file:
+            image = Image.open(uploaded_file).convert("RGB")
+            
+            if app_mode == "Dự đoán nhanh (Single Sign)":
+                row_col1, row_col2, row_col3 = st.columns([1, 1, 1])
+                with row_col2:
+                    st.image(image, caption='Ảnh đã tải lên', use_container_width=True)
+                
+                if st.button("🔍 BẮT ĐẦU NHẬN DIỆN"):
+                    with st.spinner('Đang phân tích...'):
+                        img_batch = preprocess_image_for_cnn(image)
+                        prediction_id, confidence = predict_hybrid(img_batch, cnn_extractor, rec_scaler, svm_model)
+                        result_name = class_names.get(prediction_id, "Không xác định")
+
+                        st.markdown(f"""
+                            <div class="prediction-card">
+                                <div class="result-title">KẾT QUẢ PHÂN TÍCH HYBRID</div>
+                                <div class="result-name">{result_name}</div>
+                                <div class="label-id">NHÃN: #{prediction_id} | ĐỘ TIN CẬY: {confidence:.2f}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        st.balloons()
+
+            elif app_mode == "Phát hiện & Nhận diện (Full Image)":
+                det_model, det_scaler = load_detection_system()
+                if det_model is not None and det_scaler is not None:
+                    detector = TrafficSignDetector(
+                        model_path=os.path.join(current_dir, "models", "detect_model.pkl"),
+                        scaler_path=os.path.join(current_dir, "models", "detect_scaler.pkl")
+                    )
+                    
+                    if st.button("🚀 BẮT ĐẦU QUÉT TOÀN CẢNH"):
+                        import time
+                        start_time = time.time()
+                        with st.spinner('Đang thực hiện quét đa sắc...'):
+                            img_bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                            display_pil = image.copy()
+                            boxes, mask = detector.detect(
+                                img_bgr, 
+                                min_s=det_params['min_s'], 
+                                min_v=det_params['min_v'],
+                                min_size=det_params['min_size'],
+                                return_mask=True,
+                                auto_tune=auto_tune
+                            )
                             
-                            # Hiển thị danh sách kết quả bên dưới
-                            st.write("### Chi tiết các biển báo:")
-                            cols = st.columns(min(len(results), 4))
-                            for idx, res in enumerate(results):
-                                with cols[idx % 4]:
-                                    x, y, w, h = res["box"]
-                                    st.image(image.crop((x, y, x+w, y+h)), width=120)
-                                    st.write(f"**{res['label']}**")
-                                    st.write(f"Độ tin cậy: {res['conf']:.2f}")
+                            elapsed_time = time.time() - start_time
+                            
+                            if not auto_tune and show_debug:
+                                st.subheader("🔍 Mặt nạ quét màu (Mask)")
+                                st.image(mask, caption='Vùng màu trắng là nơi OpenCV đang tìm kiếm biển báo', use_container_width=True)
+                            
+                            if not boxes:
+                                st.warning(f"Không tìm thấy biển báo nào (Thời gian quét: {elapsed_time:.2f}s). Hãy thử giảm Saturation/Value.")
+                            else:
+                                st.success(f"Tìm thấy {len(boxes)} biển báo trong {elapsed_time:.2f} giây!")
+                                
+                                results = []
+                                for i, box in enumerate(boxes):
+                                    x, y, w, h = box
+                                    roi = img_bgr[y:y+h, x:x+w]
+                                    roi_pil = Image.fromarray(cv2.cvtColor(roi, cv2.COLOR_BGR2RGB))
+                                    
+                                    img_batch = preprocess_image_for_cnn(roi_pil)
+                                    pred_id, conf = predict_hybrid(img_batch, cnn_extractor, rec_scaler, svm_model)
+                                    label = class_names.get(pred_id, "Không xác định")
+                                    
+                                    results.append({
+                                        "box": (x, y, w, h),
+                                        "label": label,
+                                        "id": pred_id,
+                                        "conf": conf
+                                    })
+                                    
+                                    draw = ImageDraw.Draw(display_pil)
+                                    draw.rectangle([x, y, x+w, y+h], outline=(0, 255, 0), width=3)
+                                    display_pil = draw_vietnamese_text(display_pil, label, (x, y-25))
+
+                                st.image(display_pil, caption='Kết quả phát hiện v4.2', use_container_width=True)
+                                
+                                st.write("### Chi tiết các biển báo:")
+                                cols = st.columns(min(len(results), 4))
+                                for idx, res in enumerate(results):
+                                    with cols[idx % 4]:
+                                        x, y, w, h = res["box"]
+                                        st.image(image.crop((x, y, x+w, y+h)), use_container_width=True)
+                                        st.write(f"**{res['label']}**")
+                                        st.write(f"Độ tin cậy: {res['conf']:.2f}")
 
         # --- PHẦN MINH BẠCH TOÁN HỌC ---
         st.divider()

@@ -26,3 +26,4 @@
 | ISS014 | Đốm ma chiếm chỗ biển thật (Case 3), Không thấy biển (Case 2) | Gỡ bỏ seen_boxes, mở rộng lưới quét 4x4, thêm lọc mật độ màu >95%. | Hoàn thành v5.0 |
 | ISS015 | Hyper-Scan chưa đạt kỳ vọng của người dùng | Tạm thời disable mặc định, tập trung sức mạnh vào chế độ Thủ công (Manual). | Hoàn thành v5.1 |
 | ISS016 | Biển báo nhỏ bị mất khi Downscaling | Loại bỏ hoàn toàn logic resize, quét trên Full Resolution. | Hoàn thành v5.2 |
+| ISS017 | Nhu cầu quét ảnh hàng loạt từ thư mục | Triển khai BatchProcessor và tích hợp giao diện Batch Mode vào Streamlit. | Hoàn thành v6.0 |
