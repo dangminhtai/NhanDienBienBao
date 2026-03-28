@@ -104,66 +104,56 @@ class TrafficSignDetector:
 
     def detect(self, image_bgr, min_s=100, min_v=100, min_size=20, return_mask=False, auto_tune=False):
         """
-        Sơ đồ thực hiện: [Hyper Turbo-Scan] -> Downscale -> Grid Mask -> Upscale ROI -> SVM -> NMS
-        Nếu auto_tune=True, nó sẽ quét lưới mịn trên ảnh thu nhỏ để đạt tốc độ tối đa.
+        Sơ đồ thực hiện: [Hyper Turbo-Scan] -> Grid Mask -> SVM -> NMS
         """
         if auto_tune:
             # 1. Tối ưu ánh sáng (CLAHE) - Làm 1 lần duy nhất trên ảnh gốc
             image_normalized = self._apply_clahe(image_bgr)
-            
-            # 2. Hạ độ phân giải để quét (Downscaling)
             h, w = image_bgr.shape[:2]
-            scale = 800.0 / max(w, h) if max(w, h) > 800 else 1.0
-            image_small = cv2.resize(image_normalized, (0, 0), fx=scale, fy=scale)
-            hsv_small = cv2.cvtColor(image_small, cv2.COLOR_BGR2HSV)
+            hsv_full = cv2.cvtColor(image_normalized, cv2.COLOR_BGR2HSV)
             
-            # 3. Quét lưới mịn nhưng an toàn (v4.6 Ghost Hunter)
-            s_levels = [40, 80, 120, 160] # Quét rộng hơn để không sót biển bạc màu
+            # 2. Quét lưới mịn trên độ phân giải gốc (v5.2 - Không Downscaling)
+            s_levels = [40, 80, 120, 160] 
             v_levels = [40, 80, 120, 160] 
-            target_min_size_small = int(min_size * scale)
             
             all_candidates = []
             
             for s in s_levels:
                 for v in v_levels:
-                    mask = self._get_hsv_mask(hsv_small, s, v)
+                    mask = self._get_hsv_mask(hsv_full, s, v)
                     # morphology mạnh hơn để nối các phần biển báo bị vỡ (như vạch trắng giữa biển đỏ)
                     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((9,9), np.uint8))
                     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3,3), np.uint8))
                     
                     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                     for cnt in contours:
-                        xs, ys, ws, hs = cv2.boundingRect(cnt)
-                        if ws >= target_min_size_small and hs >= target_min_size_small:
-                            # 1. [GEOMETRY] Solidity > 0.3 (Cho phép biển có họa tiết trắng lớn)
+                        x, y, w_box, h_box = cv2.boundingRect(cnt)
+                        if w_box >= min_size and h_box >= min_size:
+                            # 1. [GEOMETRY] Solidity > 0.3
                             area_cnt = cv2.contourArea(cnt)
-                            if area_cnt < (ws * hs * 0.30): continue 
+                            if area_cnt < (w_box * h_box * 0.30): continue 
                             
-                            x, y = int(xs / scale), int(ys / scale)
-                            w_full, h_full = int(ws / scale), int(hs / scale)
-                            
-                            aspect_ratio = w_full / float(h_full)
+                            aspect_ratio = w_box / float(h_box)
                             if 0.6 < aspect_ratio < 1.4:
-                                y_end, x_end = min(y+h_full, h), min(x+w_full, w)
+                                y_end, x_end = min(y+h_box, h), min(x+w_box, w)
                                 roi = image_normalized[y:y_end, x:x_end]
                                 if roi.size == 0: continue
                                 
-                                # 2. [VIBRANCE + DENSITY] Lọc đốm nhiễu đặc (Ghosts)
+                                # 2. [VIBRANCE + DENSITY] Lọc đốm nhiễu 
                                 roi_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
                                 avg_s = np.mean(roi_hsv[:,:,1])
-                                if avg_s < 30: continue # Biển báo thật thường rất rực rỡ
+                                if avg_s < 30: continue 
                                 
-                                # Kiểm tra "độ đặc" của màu sắc chính yếu
-                                # Nếu một màu chiếm > 95% ảnh thì thường là đốm sáng/lá cây, không phải biển báo (có họa tiết)
                                 _, s_map, _ = cv2.split(roi_hsv)
                                 high_s_ratio = np.sum(s_map > 50) / float(roi.size / 3)
-                                if high_s_ratio > 0.95: continue # Loại bỏ "đốm ma" thuần màu
+                                if high_s_ratio > 0.95: continue 
                                 
-                                # 3. [FOCUS] Kiểm tra độ nét (Nới lỏng xuống 40)
+                                # 3. [FOCUS] Kiểm tra độ nét trên ROI gốc
                                 roi_gray_full = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
                                 lap_var = cv2.Laplacian(roi_gray_full, cv2.CV_64F).var()
-                                if lap_var < 40: continue # Biển báo kim loại luôn có texture sắc nét
+                                if lap_var < 40: continue 
                                 
+                                # 4. [HOG + SVM]
                                 roi_resized = cv2.resize(roi, (32, 32))
                                 roi_gray = cv2.cvtColor(roi_resized, cv2.COLOR_BGR2GRAY)
                                 features = hog(roi_gray, **self.hog_params)
@@ -171,9 +161,8 @@ class TrafficSignDetector:
                                 
                                 if self.model.predict(features_scaled)[0] == 1:
                                     score = self.model.decision_function(features_scaled)[0]
-                                    # 4. [SVM] Trả về ngưỡng 0.0 tiêu chuẩn
                                     if score > 0.0:
-                                        all_candidates.append(((x, y, w_full, h_full), score))
+                                        all_candidates.append(((x, y, w_box, h_box), score))
 
             if not all_candidates:
                 return ([], None) if return_mask else []
