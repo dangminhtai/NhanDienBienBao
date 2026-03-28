@@ -13,3 +13,4 @@
 | ISS008 | Cấu trúc thư mục chồng chéo (`src/` vs `streamlit/src/`) | Triển khai logic nạp model/scaler linh hoạt. | Đang cải thiện |
 | ISS009 | RuntimeError: Data is outside [0.0, 1.0] in HOG visualization | Thêm tham số `clamp=True` vào lệnh `st.image`. | Hoàn thành v4.1 |
 | ISS010 | Mô hình bị Overfitting trên tập Train/Test (Đạt 91%+ nhưng sai trên ảnh lạ) | Do $C=100.0$ quá cao và thiếu Data Augmentation. | Đã chẩn đoán (Xem docs) |
+| ISS011 | InconsistentVersionWarning: scikit-learn mismatch (1.5.1 vs 1.6.1) | Phân tích log terminal. | Nâng cấp scikit-learn lên 1.6.1 nếu gặp lỗi logic. |

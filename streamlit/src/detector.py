@@ -26,24 +26,31 @@ class TrafficSignDetector:
             'feature_vector': True
         }
 
-    def _get_hsv_mask(self, hsv_img):
-        """Lọc màu đỏ và xanh dương để tìm vùng ứng viên."""
+    def _get_hsv_mask(self, hsv_img, min_s=100, min_v=100):
+        """Lọc màu đỏ, xanh dương và vàng để tìm vùng ứng viên."""
         # Màu đỏ (2 dải)
-        lower_red1 = np.array([0, 100, 100])
+        lower_red1 = np.array([0, min_s, min_v])
         upper_red1 = np.array([10, 255, 255])
         mask_red1 = cv2.inRange(hsv_img, lower_red1, upper_red1)
 
-        lower_red2 = np.array([160, 100, 100])
+        lower_red2 = np.array([160, min_s, min_v])
         upper_red2 = np.array([179, 255, 255])
         mask_red2 = cv2.inRange(hsv_img, lower_red2, upper_red2)
         red_mask = cv2.bitwise_or(mask_red1, mask_red2)
 
         # Màu xanh dương
-        lower_blue = np.array([100, 100, 100])
+        lower_blue = np.array([100, min_s, min_v])
         upper_blue = np.array([130, 255, 255])
         blue_mask = cv2.inRange(hsv_img, lower_blue, upper_blue)
+        
+        # Màu vàng (Mới bổ sung để bắt biển báo Đường ưu tiên, v.v.)
+        lower_yellow = np.array([15, min_s, min_v])
+        upper_yellow = np.array([35, 255, 255])
+        yellow_mask = cv2.inRange(hsv_img, lower_yellow, upper_yellow)
 
-        return cv2.bitwise_or(red_mask, blue_mask)
+        combined_mask = cv2.bitwise_or(red_mask, blue_mask)
+        combined_mask = cv2.bitwise_or(combined_mask, yellow_mask)
+        return combined_mask
 
     def _preprocess_mask(self, mask):
         """Làm sạch mask bằng morphology."""
@@ -86,12 +93,12 @@ class TrafficSignDetector:
 
         return [boxes[i] for i in keep]
 
-    def detect(self, image_bgr):
+    def detect(self, image_bgr, min_s=100, min_v=100, min_size=20, return_mask=False):
         """
         Sơ đồ thực hiện: HSV Mask -> Contours -> SVM Verification -> NMS
         """
         hsv = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
-        mask = self._get_hsv_mask(hsv)
+        mask = self._get_hsv_mask(hsv, min_s, min_v)
         mask = self._preprocess_mask(mask)
 
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -102,16 +109,12 @@ class TrafficSignDetector:
             aspect_ratio = w / float(h)
             
             # Lọc sơ bộ theo kích thước và tỷ lệ
-            if w > 20 and h > 20 and 0.7 < aspect_ratio < 1.3:
+            if w > min_size and h > min_size and 0.6 < aspect_ratio < 1.4:
                 # Cắt vùng ảnh ứng viên (ROI)
                 roi = image_bgr[y:y+h, x:x+w]
                 if roi.size == 0: continue
                 
-                # Resize về 64x64 để trích xuất HOG (khớp với detect_scaler 324 features)
-                # 324 features = (64/8 - 1)^2 * 2^2 * 9 = 7^2 * 4 * 9 = 49 * 36 = 1764? 
-                # Khoan, 324 features = 9 orientations * 2x2 cells * (size/8 - 1)^2
-                # Nếu size=32: (32/8 - 1)^2 * 4 * 9 = 3^2 * 36 = 9 * 36 = 324. CHÍNH XÁC!
-                # Phải resize ROI về 32x32.
+                # Resize về 32x32 cho HOG 324 features
                 roi_resized = cv2.resize(roi, (32, 32))
                 roi_gray = cv2.cvtColor(roi_resized, cv2.COLOR_BGR2GRAY)
                 
@@ -121,16 +124,13 @@ class TrafficSignDetector:
                 
                 # Dự đoán bằng SVM nhị phân
                 prediction = self.model.predict(features_scaled)
-                # Lấy xác suất nếu model hỗ trợ (hoặc dùng decision_function)
-                # detect_model.pkl thường là SVC nhị phân
-                if prediction[0] == 1: # Giả định 1 là Traffic Sign
-                    # Tính score đơn giản (SVM decision function)
+                if prediction[0] == 1:
                     score = self.model.decision_function(features_scaled)[0]
-                    if score > 0: # Chỉ lấy các mẫu nằm ngoài lề phân tách dương
+                    if score > -0.5: # Nới lỏng margin một chút cho ảnh thực tế
                         candidates.append(((x, y, w, h), score))
 
         if not candidates:
-            return []
+            return ([], mask) if return_mask else []
 
         boxes = [c[0] for c in candidates]
         scores = [c[1] for c in candidates]
@@ -138,4 +138,6 @@ class TrafficSignDetector:
         # Áp dụng NMS
         final_boxes = self.nms(boxes, scores)
         
+        if return_mask:
+            return final_boxes, mask
         return final_boxes

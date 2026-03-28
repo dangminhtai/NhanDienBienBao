@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import matplotlib.pyplot as plt
 import cv2
 
@@ -10,6 +10,21 @@ from src.data_processor import preprocess_image_for_cnn
 from src.model_handler import load_hybrid_system, predict_hybrid, load_detection_system
 from src.class_metadata import get_class_names
 from src.detector import TrafficSignDetector
+
+def draw_vietnamese_text(image_pil, text, position, font_size=20, color=(0, 255, 0)):
+    """Vẽ chữ tiếng Việt lên ảnh PIL."""
+    draw = ImageDraw.Draw(image_pil)
+    # Thử nạp font Arial trên Windows, nếu không dùng default
+    try:
+        font = ImageFont.truetype("arial.ttf", font_size)
+    except:
+        font = ImageFont.load_default()
+    
+    # Vẽ nền cho chữ để dễ đọc
+    bbox = draw.textbbox(position, text, font=font)
+    draw.rectangle(bbox, fill=(0, 0, 0, 100))
+    draw.text(position, text, font=font, fill=color)
+    return image_pil
 
 def load_css(file_name):
     """Nạp file CSS từ đường dẫn cục bộ."""
@@ -21,7 +36,7 @@ def load_css(file_name):
 st.set_page_config(
     page_title="Traffic Sign Recognition v4.0",
     page_icon="🚦",
-    layout="wide" # Chuyển sang wide để hiển thị ảnh detection tốt hơn
+    layout="wide" 
 )
 
 # --- NẠP CSS NGOÀI ---
@@ -36,12 +51,21 @@ def main():
                                 ["Dự đoán nhanh (Single Sign)", "Phát hiện & Nhận diện (Full Image)"])
     
     st.sidebar.markdown("---")
+    
+    # Tham số Detection (Chỉ hiện khi ở chế độ Full Image)
+    det_params = {}
+    if app_mode == "Phát hiện & Nhận diện (Full Image)":
+        st.sidebar.subheader("🛠️ Cấu hình Detetion")
+        det_params['min_s'] = st.sidebar.slider("Độ bão hòa tối thiểu (Saturation)", 0, 255, 80)
+        det_params['min_v'] = st.sidebar.slider("Độ sáng tối thiểu (Value)", 0, 255, 80)
+        det_params['min_size'] = st.sidebar.slider("Kích thước tối thiểu (Px)", 10, 1000, 20)
+        show_debug = st.sidebar.checkbox("Hiện mặt nạ quét màu (Debug Mask)", value=False)
+    
     st.sidebar.markdown(f"""
         <div style="padding:10px; border:1px solid #eee; border-radius:10px">
         <b>Phiên bản:</b> 4.0 (Hybrid)<br>
-        <b>Chế độ:</b> {app_mode}<br>
         <b>Kiến trúc:</b> CNN + SVM Linear<br>
-        <b>Detection:</b> SVM Binary + HOG
+        <b>Tiếng Việt:</b> Đã hỗ trợ
         </div>
     """, unsafe_allow_html=True)
 
@@ -59,13 +83,13 @@ def main():
     uploaded_file = st.file_uploader("📥 Chọn ảnh...", type=["jpg", "png", "jpeg"])
 
     if uploaded_file:
-        image = Image.open(uploaded_file)
+        image = Image.open(uploaded_file).convert("RGB")
         
         if app_mode == "Dự đoán nhanh (Single Sign)":
             # Căn giữa ảnh bằng cột
             row_col1, row_col2, row_col3 = st.columns([1, 1, 1])
             with row_col2:
-                st.image(image, caption='Ảnh đã tải lên', use_container_width=True)
+                st.image(image, caption='Ảnh đã tải lên', width="stretch")
             
             if st.button("🔍 BẮT ĐẦU NHẬN DIỆN"):
                 with st.spinner('Đang phân tích...'):
@@ -83,8 +107,6 @@ def main():
                     st.balloons()
 
         else: # Phát hiện & Nhận diện (Full Image)
-            st.info("Chế độ Nâng cao: Hệ thống sẽ tự động tìm các biển báo trong ảnh và nhận diện từng cái.")
-            
             # Load Detection Models
             det_model, det_scaler = load_detection_system()
             if det_model is not None and det_scaler is not None:
@@ -93,19 +115,29 @@ def main():
                     scaler_path=os.path.join(current_dir, "models", "detect_scaler.pkl")
                 )
                 
-                if st.button("🚀 PHÁT HIỆN & NHẬN DIỆN"):
-                    with st.spinner('Đang quét biển báo...'):
+                if st.button("🚀 BẮT ĐẦU QUÉT TOÀN CẢNH"):
+                    with st.spinner('Đang thực hiện quét đa sắc...'):
                         # Chuyển PIL sang OpenCV BGR
                         img_bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-                        boxes = detector.detect(img_bgr)
+                        boxes, mask = detector.detect(
+                            img_bgr, 
+                            min_s=det_params['min_s'], 
+                            min_v=det_params['min_v'],
+                            min_size=det_params['min_size'],
+                            return_mask=True
+                        )
+                        
+                        if show_debug:
+                            st.subheader("🔍 Mặt nạ quét màu (Mask)")
+                            st.image(mask, caption='Vùng màu trắng là nơi OpenCV đang tìm kiếm biển báo', width="stretch")
                         
                         if not boxes:
-                            st.warning("Không tìm thấy biển báo nào trong ảnh này.")
+                            st.warning("Không tìm thấy biển báo nào với cấu hình hiện tại. Hãy thử giảm Saturation/Value ở thanh bên.")
                         else:
                             st.success(f"Tìm thấy {len(boxes)} biển báo!")
                             
                             # Vẽ và nhận diện
-                            display_img = img_bgr.copy()
+                            display_pil = image.copy()
                             results = []
                             
                             for i, box in enumerate(boxes):
@@ -116,7 +148,7 @@ def main():
                                 
                                 img_batch = preprocess_image_for_cnn(roi_pil)
                                 pred_id, conf = predict_hybrid(img_batch, cnn_extractor, rec_scaler, svm_model)
-                                label = class_names.get(pred_id, "Unknown")
+                                label = class_names.get(pred_id, "Không xác định")
                                 
                                 results.append({
                                     "box": (x, y, w, h),
@@ -125,23 +157,23 @@ def main():
                                     "conf": conf
                                 })
                                 
-                                # Vẽ lên ảnh
-                                cv2.rectangle(display_img, (x, y), (x+w, y+h), (0, 255, 0), 3)
-                                cv2.putText(display_img, f"{label}", (x, y-10), 
-                                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+                                # Vẽ lên ảnh PIL bằng hàm hỗ trợ tiếng Việt
+                                draw = ImageDraw.Draw(display_pil)
+                                draw.rectangle([x, y, x+w, y+h], outline=(0, 255, 0), width=3)
+                                display_pil = draw_vietnamese_text(display_pil, label, (x, y-25))
 
                             # Hiển thị ảnh kết quả
-                            st.image(cv2.cvtColor(display_img, cv2.COLOR_BGR2RGB), caption='Kết quả phát hiện', use_container_width=True)
+                            st.image(display_pil, caption='Kết quả phát hiện v4.1', width="stretch")
                             
                             # Hiển thị danh sách kết quả bên dưới
                             st.write("### Chi tiết các biển báo:")
-                            cols = st.columns(min(len(results), 3))
+                            cols = st.columns(min(len(results), 4))
                             for idx, res in enumerate(results):
-                                with cols[idx % 3]:
+                                with cols[idx % 4]:
                                     x, y, w, h = res["box"]
-                                    st.image(image.crop((x, y, x+w, y+h)), width=100)
+                                    st.image(image.crop((x, y, x+w, y+h)), width=120)
                                     st.write(f"**{res['label']}**")
-                                    st.write(f"ID: {res['id']} | Conf: {res['conf']:.2f}")
+                                    st.write(f"Độ tin cậy: {res['conf']:.2f}")
 
         # --- PHẦN MINH BẠCH TOÁN HỌC ---
         st.divider()
