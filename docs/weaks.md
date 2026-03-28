@@ -7,6 +7,9 @@
 ## Độ chính xác (Accuracy)
 - **Cận thị HSV**: Sự phụ thuộc vào lọc màu HSV khiến mô hình dễ bị đánh lừa bởi các vùng có màu đỏ/xanh tương tự (biển quảng cáo, đèn giao thông) nếu SVM Binary không đủ mạnh.
 - **Ánh sáng khắc nghiệt**: Trong điều kiện thiếu sáng trầm trọng hoặc lóa nắng, mặt nạ HSV có thể bị đứt gãy, dẫn đến việc bỏ sót biển báo.
+- **Nhận diện màu vàng:** Dải màu vàng của biển báo "Đường ưu tiên" rất dễ bị nhầm với lá cây héo hoặc đất nâu. 
+- **Cách khắc phục hiện tại (v4.6):** Đã siết chặt dải Hue vàng (17-33) và thêm lọc Solidity/Laplacian.
+- **Điểm yếu còn lại:** Các vật thể hình học đặc và sắc nét có màu đỏ/xanh/vàng giả (ví dụ: biển quảng cáo, nắp chai) vẫn có thể gây nhiễu nếu SVM không đủ mạnh.
 
 ## Kỹ thuật (Technical)
 - **NMS**: Ngưỡng NMS cố định có thể loại bỏ các biển báo nằm rất gần nhau.

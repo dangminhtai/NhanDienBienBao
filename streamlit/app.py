@@ -58,7 +58,8 @@ def main():
         st.sidebar.subheader("🛠️ Cấu hình Detetion")
         det_params['min_s'] = st.sidebar.slider("Độ bão hòa tối thiểu (Saturation)", 0, 255, 80)
         det_params['min_v'] = st.sidebar.slider("Độ sáng tối thiểu (Value)", 0, 255, 80)
-        det_params['min_size'] = st.sidebar.slider("Kích thước tối thiểu (Px)", 10, 1000, 20)
+        det_params['min_size'] = st.sidebar.slider("Kích thước tối thiểu (Px)", 10, 200, 30)
+        auto_tune = st.sidebar.checkbox("Chế độ Hyper-Scan (Siêu quét 225 vòng)", value=True, help="Hệ thống quét mịn 225 tổ hợp màu sắc để không bỏ sót bất kỳ biển mãu nào.")
         show_debug = st.sidebar.checkbox("Hiện mặt nạ quét màu (Debug Mask)", value=False)
     
     st.sidebar.markdown(f"""
@@ -116,6 +117,8 @@ def main():
                 )
                 
                 if st.button("🚀 BẮT ĐẦU QUÉT TOÀN CẢNH"):
+                    import time
+                    start_time = time.time()
                     with st.spinner('Đang thực hiện quét đa sắc...'):
                         # Chuyển PIL sang OpenCV BGR
                         img_bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
@@ -124,17 +127,20 @@ def main():
                             min_s=det_params['min_s'], 
                             min_v=det_params['min_v'],
                             min_size=det_params['min_size'],
-                            return_mask=True
+                            return_mask=True,
+                            auto_tune=auto_tune
                         )
+                        
+                        elapsed_time = time.time() - start_time
                         
                         if show_debug:
                             st.subheader("🔍 Mặt nạ quét màu (Mask)")
                             st.image(mask, caption='Vùng màu trắng là nơi OpenCV đang tìm kiếm biển báo', width="stretch")
                         
                         if not boxes:
-                            st.warning("Không tìm thấy biển báo nào với cấu hình hiện tại. Hãy thử giảm Saturation/Value ở thanh bên.")
+                            st.warning(f"Không tìm thấy biển báo nào (Thời gian quét: {elapsed_time:.2f}s). Hãy thử giảm Saturation/Value.")
                         else:
-                            st.success(f"Tìm thấy {len(boxes)} biển báo!")
+                            st.success(f"Tìm thấy {len(boxes)} biển báo trong {elapsed_time:.2f} giây!")
                             
                             # Vẽ và nhận diện
                             display_pil = image.copy()

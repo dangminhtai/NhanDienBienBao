@@ -96,9 +96,12 @@ def predict_hybrid(image_batch, cnn_extractor, scaler, svm_model):
     # 3. Dự đoán (SVM)
     prediction = svm_model.predict(scaled_features)[0]
     
-    # 4. Tính toán độ tin cậy (Decision Function)
-    # SVM Linear trả về khoảng cách tới siêu mặt phẳng
-    decision_scores = svm_model.decision_function(scaled_features)[0]
-    confidence = decision_scores[prediction]
+    # 4. Chuẩn hóa độ tin cậy sang % (v4.6)
+    # SVM Linear trả về khoảng cách tới siêu mặt phẳng (decision_function)
+    # Ta dùng hàm Sigmoid để nén về dải 0-100%
+    import numpy as np
+    score = svm_model.decision_function(scaled_features)[0][prediction]
+    # Dùng hệ số scale=5.0 để dải điểm nhạy hơn
+    confidence = (1 / (1 + np.exp(-score / 5.0))) * 100
     
     return prediction, confidence

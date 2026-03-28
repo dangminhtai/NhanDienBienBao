@@ -9,6 +9,9 @@
 
 ## Tiền xử lý (Preprocessing)
 - **CLAHE**: Cân bằng ánh sáng cục bộ cực kỳ quan trọng đối với tập dữ liệu GTSRB vì có nhiều ảnh bị tối hoặc lóa sáng.
+- **Lọc hình học (Solidity):** Biển báo là vật thể đặc. Việc kiểm tra tỷ lệ giữa diện tích contour và diện tích bounding box (Solidity > 0.45) là cách cực kỳ hiệu quả để loại bỏ các đốm nhiễu lốm đốm.
+- **Độ nét (Laplacian Variance):** Biển báo kim loại thường sắc nét. Các vùng mờ bokeh hoặc lá cây mờ có phương sai Laplacian thấp. Ngưỡng 60-80 giúp loại bỏ "đốm ma" rất tốt.
+- **Chuẩn hóa SVM Score:** SVM Linear trả về khoảng cách không giới hạn. Dùng hàm Sigmoid (Platt scaling đơn giản) giúp chuyển về dải 0-100% thân thiện với người dùng.
 
 ## Triển khai (Deployment)
 - Luôn kiểm tra tính tương thích giữa `StandardScaler` và `Model` (số lượng đặc trưng `n_features_in_`).
