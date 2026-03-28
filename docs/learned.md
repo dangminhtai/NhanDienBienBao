@@ -17,3 +17,9 @@
 - **Giải mã Hộp đen (Model Transparency)**: Việc kết hợp `st.latex` và `st.pyplot` giúp giao diện AI trở nên chuyên nghiệp và minh bạch hơn, giải quyết triệt để yêu cầu về "Toán học cho AI".
 - **Tối ưu hóa (Optimization)**: Sử dụng `@st.cache_resource` giúp giảm thời gian nạp mô hình SVM (1812 đặc trưng) xuống mức tức thì sau lần nạp đầu tiên.
 - **SVM Confidence**: Dù SVC không bật `probability=True`, ta vẫn có thể ước lượng độ tin cậy thông qua `decision_function` và hàm Sigmoid để cải thiện trải nghiệm người dùng.
+
+### Học được từ v4.0-Detect (Full-Image Pipeline)
+- **Kiến trúc Lai ghép Cấp độ 2**: Kết hợp giữa Scanning (HOG+SVM nhị phân) để tìm vùng ứng viên và Recognition (CNN+SVM đa lớp) để định danh. Đây là cách tiếp cận hiệu quả hơn so với việc quét CNN trên toàn bô ảnh.
+- **Tham số HOG**: Cần khớp chính xác số lượng đặc trưng (ví dụ: 324) với kích thước ROI (32x32) để đảm bảo scaler hoạt động đúng.
+- **NMS (Non-Maximum Suppression)**: Là thành phần bắt buộc trong bất kỳ pipeline Detection nào để dọn dẹp các hộp phát hiện dư thừa.
+- **Streamlit Wide Layout**: Phù hợp cho việc hiển thị các kết quả phân tích phức tạp và nhiều ảnh cùng lúc.

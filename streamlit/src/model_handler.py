@@ -16,6 +16,10 @@ MODEL_PATH = os.path.join(MODELS_DIR, "final_hybrid_svm.pkl")
 SCALER_PATH = os.path.join(MODELS_DIR, "svm_scaler.pkl")
 CNN_PATH = os.path.join(MODELS_DIR, "cnn_feature_extractor.h5")
 
+# Đường dẫn mô hình Detection (v4.0+)
+DETECTION_MODEL_PATH = os.path.join(MODELS_DIR, "detect_model.pkl")
+DETECTION_SCALER_PATH = os.path.join(MODELS_DIR, "detect_scaler.pkl")
+
 @st.cache_resource
 def load_hybrid_system():
     """
@@ -51,6 +55,29 @@ def load_hybrid_system():
     except Exception as e:
         st.error(f"❌ Lỗi khi tải hệ thống mô hình: {str(e)}")
         return None, None, None
+
+@st.cache_resource
+def load_detection_system():
+    """
+    Tải hệ thống phát hiện biển báo (Detection):
+    1. SVM Binary Classifier (.pkl)
+    2. HOG Scaler (.pkl)
+    """
+    try:
+        if not os.path.exists(DETECTION_MODEL_PATH):
+            st.error(f"❌ Không tìm thấy mô hình Detection tại: {DETECTION_MODEL_PATH}")
+            return None, None
+            
+        if not os.path.exists(DETECTION_SCALER_PATH):
+            st.error(f"❌ Không tìm thấy Scaler cho Detection tại: {DETECTION_SCALER_PATH}")
+            return None, None
+            
+        model = joblib.load(DETECTION_MODEL_PATH)
+        scaler = joblib.load(DETECTION_SCALER_PATH)
+        return model, scaler
+    except Exception as e:
+        st.error(f"❌ Lỗi khi tải hệ thống Detection: {str(e)}")
+        return None, None
 
 def predict_hybrid(image_batch, cnn_extractor, scaler, svm_model):
     """

@@ -1,15 +1,15 @@
-### Đề xuất cải thiện (Next Steps) - Phiên bản v4.1+
+# Các bước tiếp theo (Next Steps) - Lộ trình v4.1+
 
-Sau khi triển khai thành công mô hình Lai ghép (Hybrid) v4.0, các bước tiếp theo để nâng cấp hệ thống bao gồm:
+## Cải tiến Thuật toán (Algorithm Improvements)
+- **YOLO Integration**: Chuyển đổi từ SVM-HOG scanning sang YOLOv8/v11 để đạt tốc độ real-time và độ chính xác cao hơn trong tác vụ Detection.
+- **Data Augmentation**: Bổ sung các phép biến đổi về ánh sáng và nhiễu (GTSDB thường có ảnh chất lượng thấp hơn GTSRB) để detector hoạt động ổn định hơn.
+- **Ensemble Model**: Kết hợp nhiều kiến trúc CNN (MobileNet, ResNet) làm feature extractor để tăng cường độ tin cậy.
 
-1.  **Chuyển đổi sang WebCam (Real-time Prediction)**:
-    -   Tích hợp tính năng nhận diện biển báo trực tiếp từ Camera bằng OpenCV.
-    -   Sử dụng thư viện `streamlit-webrtc` để hỗ trợ trình duyệt.
-2.  **Tối ưu hóa Mô hình (Model Quantization)**:
-    -   Chuyển đổi mô hình CNN sang định dạng `.tflite` (TensorFlow Lite) để giảm dung lượng và tăng tốc độ trích xuất đặc trưng trên CPU.
-3.  **Hệ thống Lọc nhiễu (Pre-filtering)**:
-    -   Thêm một lớp phân loại nhị phân (Binary Classifier) trước khi đưa vào SVM để xác định xem vùng ảnh có thực sự là "Biển báo" hay không.
-4.  **Logging & Monitoring**:
-    -   Sử dụng SQLite hoặc tệp log để lưu lại các lịch sử dự đoán (kèm ảnh) để phân tích các trường hợp nhầm lẫn (Misclassifications) sau này.
-5.  **Ứng dụng thực tế**:
-    -   Xây dựng thêm tính năng đọc tên biển báo bằng giọng nói (Text-to-Speech) để hỗ trợ lái xe rảnh tay.
+## Cải tiến Ứng dụng (App Improvements)
+- **WebCam Real-time**: Sử dụng `streamlit-webrtc` để hỗ trợ nhận diện trực tiếp qua camera thay vì chỉ tải ảnh lên.
+- **History Tracking**: Lưu trữ lịch sử nhận diện và xuất báo cáo CSV/PDF.
+- **Multilingual UI**: Hỗ trợ đa ngôn ngữ hoàn chỉnh (Vietnamese, English, German).
+
+## Triển khai (Deployment)
+- **Dockerization**: Đóng gói ứng dụng vào Docker container để dễ dàng triển khai lên Cloud (AWS, Azure, Heroku).
+- **Optimization**: Chuyển đổi mô hình sang định dạng ONNX hoặc TensorFlow Lite để chạy nhanh hơn trên các thiết bị tài nguyên yếu.
