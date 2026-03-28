@@ -1,43 +1,77 @@
-import streamlit as st
-import os
 import joblib
-import numpy as np
+import os
+import streamlit as st
+
+# Kiểm tra xem tensorflow có sẵn không để hiển thị lỗi thân thiện
+try:
+    import tensorflow as tf
+    from tensorflow.keras.models import load_model
+    HAS_TENSORFLOW = True
+except ImportError:
+    HAS_TENSORFLOW = False
+
+# Đường dẫn mô hình v4.0 (Hybrid)
+MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models")
+MODEL_PATH = os.path.join(MODELS_DIR, "final_hybrid_svm.pkl")
+SCALER_PATH = os.path.join(MODELS_DIR, "svm_scaler.pkl")
+CNN_PATH = os.path.join(MODELS_DIR, "cnn_feature_extractor.h5")
+
 @st.cache_resource
-def load_model_and_scaler(base_dir):
+def load_hybrid_system():
     """
-    Tải mô hình SVC và bộ chuẩn hóa từ thư mục models/.
-    Sử dụng cache của Streamlit để tránh load lại nhiều lần.
+    Tải hệ thống lai ghép gồm 3 thành phần:
+    1. CNN Feature Extractor (.h5)
+    2. Scaler (.pkl)
+    3. SVM Classifier (.pkl)
     """
-    model_path = os.path.join(base_dir, 'models', 'model.pkl')
-    scaler_path = os.path.join(base_dir, 'models', 'scaler.joblib')
-    
-    model = joblib.load(model_path) if os.path.exists(model_path) else None
-    scaler = joblib.load(scaler_path) if os.path.exists(scaler_path) else None
-    
-    return model, scaler
+    if not HAS_TENSORFLOW:
+        st.error("❌ Thư viện 'tensorflow' chưa được cài đặt. Vui lòng cài đặt để chạy mô hình v4.0.")
+        return None, None, None
 
-def get_prediction(model, scaler, feature_vector):
-    """
-    Thực hiện dự đoán từ vector đặc trưng.
-    Trả về (prediction_id, confidence_score).
-    """
-    if scaler is not None and scaler.n_features_in_ == feature_vector.shape[1]:
-        feature_vector = scaler.transform(feature_vector)
-    
-    prediction = model.predict(feature_vector)[0]
-    
-    # Lấy độ tin cậy nếu model hỗ trợ (hoặc dùng distance tới hyperplane)
-    confidence = 0.0
-    if hasattr(model, 'predict_proba'):
-        try:
-            probs = model.predict_proba(feature_vector)
-            confidence = np.max(probs)
-        except:
-            pass
-    elif hasattr(model, 'decision_function'):
-        # Với SVM, giá trị decision_function càng xa 0 càng tin cậy
-        dists = model.decision_function(feature_vector)
-        # Chuẩn hóa đơn giản (sigmoid-like) để hiển thị %
-        confidence = 1 / (1 + np.exp(-np.max(np.abs(dists)) / 10)) 
+    try:
+        # 1. Tải CNN Feature Extractor
+        if not os.path.exists(CNN_PATH):
+            st.error(f"❌ Không tìm thấy bộ trích xuất CNN tại: {CNN_PATH}")
+            return None, None, None
+        cnn_extractor = load_model(CNN_PATH)
 
+        # 2. Tải Scaler
+        if not os.path.exists(SCALER_PATH):
+            st.error(f"❌ Không tìm thấy bộ chuẩn hóa tại: {SCALER_PATH}")
+            return None, None, None
+        scaler = joblib.load(SCALER_PATH)
+
+        # 3. Tải SVM Model
+        if not os.path.exists(MODEL_PATH):
+            st.error(f"❌ Không tìm thấy mô hình SVM tại: {MODEL_PATH}")
+            return None, None, None
+        svm_model = joblib.load(MODEL_PATH)
+
+        return cnn_extractor, scaler, svm_model
+    except Exception as e:
+        st.error(f"❌ Lỗi khi tải hệ thống mô hình: {str(e)}")
+        return None, None, None
+
+def predict_hybrid(image_batch, cnn_extractor, scaler, svm_model):
+    """
+    Quy trình dự đoán lai ghép:
+    1. Trích xuất đặc trưng sâu từ CNN (256 dims)
+    2. Chuẩn hóa đặc trưng bằng Scaler
+    3. Phân loại bằng SVM
+    """
+    # 1. Trích xuất đặc trưng (CNN)
+    # Output của cnn_extractor.predict là (1, 256)
+    deep_features = cnn_extractor.predict(image_batch, verbose=0)
+    
+    # 2. Chuẩn hóa (Scaler)
+    scaled_features = scaler.transform(deep_features)
+    
+    # 3. Dự đoán (SVM)
+    prediction = svm_model.predict(scaled_features)[0]
+    
+    # 4. Tính toán độ tin cậy (Decision Function)
+    # SVM Linear trả về khoảng cách tới siêu mặt phẳng
+    decision_scores = svm_model.decision_function(scaled_features)[0]
+    confidence = decision_scores[prediction]
+    
     return prediction, confidence

@@ -1,9 +1,11 @@
 # Bài học kinh nghiệm trong dự án (Learned Lessons)
 
-## Kỹ thuật Feature Engineering (Hybrid)
-- Trích xuất đặc trưng lai ghép (Hybrid) giữa hình học (HOG) và màu sắc (HSV) mang lại độ chi tiết cao hơn cho mô hình ML truyền thống như SVM.
-- **HOG (Fine-grained)**: Sử dụng `pixels_per_cell=(4, 4)` thay vì 8x8 mặc định tăng gấp 4 lần số lượng đặc trưng (từ 324 lên 1764), giúp mô tả hình dạng biển báo tốt hơn.
-- **HSV Histogram**: Thêm 48 chiều đặc trưng màu sắc giúp phân biệt các biển báo có hình dạng giống nhau nhưng màu khác nhau (ví dụ: biển báo cấm đỏ vs biển báo chỉ dẫn xanh).
+## Kỹ thuật Feature### Học được từ v4.0 (Hybrid SVM+CNN)
+- **Kiến trúc Lai ghép**: Cách kết hợp CNN làm bộ trích xuất đặc trưng (Feature Extractor) và SVM làm bộ phân loại (Classifier) mang lại độ chính xác cao hơn và khả năng bao quát tốt hơn HOG.
+- **Tiền xử lý CNN**: Quy trình chuẩn hóa ảnh đơn giản (Resize 32x32, normalize 0-1) nhưng cực kỳ quan trọng để khớp với dữ liệu huấn luyện.
+- **Tích hợp Keras trong Streamlit**: Cần sử dụng `@st.cache_resource` để tránh việc tải lại mô hình CNN nặng nề mỗi khi người dùng tương tác.
+- **Minh bạch toán học**: Việc giải thích cơ chế "Deep Features" giúp người dùng tin tưởng hơn vào kết quả của mô hình "Hộp đen".
+ình dạng giống nhau nhưng màu khác nhau (ví dụ: biển báo cấm đỏ vs biển báo chỉ dẫn xanh).
 
 ## Tiền xử lý (Preprocessing)
 - **CLAHE**: Cân bằng ánh sáng cục bộ cực kỳ quan trọng đối với tập dữ liệu GTSRB vì có nhiều ảnh bị tối hoặc lóa sáng.

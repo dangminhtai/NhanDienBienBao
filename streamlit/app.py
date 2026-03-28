@@ -5,14 +5,15 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 # Import các module nội bộ từ thư mục src/
-from src.data_processor import extract_hybrid_features, get_hsv_histograms
-from src.model_handler import load_model_and_scaler, get_prediction
+from src.data_processor import preprocess_image_for_cnn
+from src.model_handler import load_hybrid_system, predict_hybrid
 from src.class_metadata import get_class_names
 
 def load_css(file_name):
     """Nạp file CSS từ đường dẫn cục bộ."""
-    with open(file_name) as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    if os.path.exists(file_name):
+        with open(file_name) as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 # Cấu hình trang
 st.set_page_config(
@@ -30,20 +31,21 @@ def main():
     st.sidebar.title("🚦 Hệ thống Nhận diện")
     st.sidebar.markdown("""
         <div style="padding:10px; border:1px solid #eee; border-radius:10px">
-        <b>Phiên bản:</b> 4.0 (Math Tracking)<br>
-        <b>Model:</b> SVM (1812 Features)
+        <b>Phiên bản:</b> 4.0 (Hybrid)<br>
+        <b>Kiến trúc:</b> CNN + SVM Linear<br>
+        <b>Đặc trưng:</b> Deep Features (256 dims)
         </div>
     """, unsafe_allow_html=True)
 
     st.title("🚦 Nhận diện Biển báo Giao thông")
-    st.write("Tải lên ảnh biển báo để AI phân tích tự động bằng SVM.")
+    st.write("Giải pháp lai ghép tối ưu: Sử dụng sức mạnh trích xuất đặc trưng của **CNN** và khả năng phân loại chính xác của **SVM**.")
 
-    # 1. Load Model & Metadata
-    model, scaler = load_model_and_scaler(current_dir)
+    # 1. Load Hybrid System
+    cnn_extractor, scaler, svm_model = load_hybrid_system()
     class_names = get_class_names()
 
-    if model is None or scaler is None:
-        st.error("❌ Không tìm thấy mô hình hoặc bộ chuẩn hóa tại thư mục `models/`.")
+    if cnn_extractor is None or scaler is None or svm_model is None:
+        st.warning("⚠️ Hệ thống mô hình đang được thiết lập hoặc thiếu thành phần. Vui lòng kiểm tra thông báo lỗi bên trên.")
         return
 
     # 2. Giao diện Upload
@@ -54,78 +56,71 @@ def main():
         # Căn giữa ảnh bằng cột
         row_col1, row_col2, row_col3 = st.columns([1, 2, 1])
         with row_col2:
-            st.image(image, caption='Ảnh đã tải lên', use_container_width=True)
+            st.image(image, caption='Ảnh đã tải lên', width=300)
         
         # Nút dự đoán
         if st.button("🔍 BẮT ĐẦU NHẬN DIỆN"):
-            with st.spinner('Đang phân tích đặc trưng Hybrid...'):
-                img_rgb = np.array(image.convert('RGB'))
+            with st.spinner('CNN đang trích xuất đặc trưng sâu...'):
+                # Tiền xử lý
+                img_batch = preprocess_image_for_cnn(image)
                 
-                # Trích xuất đặc trưng kèm visualization
-                features, hog_img = extract_hybrid_features([img_rgb], visualize=True)
-                
-                # Dự đoán kèm độ tin cậy
-                prediction_id, confidence = get_prediction(model, scaler, features)
+                # Dự đoán lai ghép
+                prediction_id, confidence = predict_hybrid(img_batch, cnn_extractor, scaler, svm_model)
                 result_name = class_names.get(prediction_id, "Không xác định")
 
                 # Hiển thị kết quả phong cách card
                 st.markdown(f"""
                     <div class="prediction-card">
-                        <div class="result-title">KẾT QUẢ PHÂN TÍCH</div>
+                        <div class="result-title">KẾT QUẢ PHÂN TÍCH HYBRID</div>
                         <div class="result-name">{result_name}</div>
-                        <div class="label-id">NHÃN: #{prediction_id} | ĐỘ TIN CẬY: {confidence*100:.2f}%</div>
+                        <div class="label-id">NHÃN: #{prediction_id} | ĐỘ TIN CẬY (MARGIN): {confidence:.2f}</div>
                     </div>
                 """, unsafe_allow_html=True)
                 st.balloons()
 
-                # --- PHẦN MINH BẠCH TOÁN HỌC (REQ008) ---
+                # --- PHẦN MINH BẠCH TOÁN HỌC (Update cho v4.0) ---
                 st.divider()
-                with st.expander("📊 CƠ SỞ TOÁN HỌC & MINH BẠCH DỮ LIỆU"):
-                    st.subheader("1. Trực quan hóa Đặc trưng (Feature Visualization)")
+                with st.expander("📊 CƠ SỞ TOÁN HỌC VÀ QUY TRÌNH LAI GHÉP (v4.0)"):
                     
+                    st.subheader("1. Tại sao dùng Hybrid (C-SVM)?")
+                    st.write("""
+                    Hệ thống này kết hợp hai "ông vua" trong học máy:
+                    - **CNN (Convolutional Neural Network)**: Chuyên gia trong việc hiểu cấu trúc ảnh, thay thế cho HOG truyền thống.
+                    - **SVM (Support Vector Machine)**: Chuyên gia trong việc tìm ranh giới phân loại tối ưu (Maximum Margin).
+                    """)
+
+                    st.subheader("2. Quy trình xử lý dữ liệu (Inference Pipeline)")
+                    st.markdown("""
+                    ```mermaid
+                    graph LR
+                        A[Ảnh gốc] --> B[Resize 32x32]
+                        B --> C[CNN Feature Extractor]
+                        C --> D[Deep Features - 256 dims]
+                        D --> E[Standard Scaler]
+                        E --> F[SVM Linear Classifier]
+                        F --> G[Kết quả cuối cùng]
+                    ```
+                    """, unsafe_allow_html=True)
+
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.info("**HOG (Histogram of Oriented Gradients)**")
-                        st.image(hog_img, caption="Bản đồ Gradient (Cạnh & Hình dạng)", use_container_width=True, clamp=True)
-                        st.write("Mô hình tập trung vào các đường biên và góc cạnh của biển báo.")
+                        st.info("**CNN Feature Extraction**")
+                        st.write("""
+                        Lớp `feature_dense` (256 node) của CNN đóng vai trò là bộ trích xuất đặc trưng tự động. 
+                        Nó học được các mẫu hình học phức tạp mà HOG có thể bỏ sót.
+                        """)
                     
                     with col2:
-                        st.info("**HSV (Color Histograms)**")
-                        hsv_feats = get_hsv_histograms(img_rgb)
-                        fig, ax = plt.subplots(figsize=(5, 3))
-                        ax.bar(range(16), hsv_feats[0:16], color='red', alpha=0.6, label='Hue')
-                        ax.bar(range(16), hsv_feats[16:32], color='green', alpha=0.4, label='Sat')
-                        ax.bar(range(16), hsv_feats[32:48], color='blue', alpha=0.2, label='Val')
-                        ax.set_title("HSV Color Bins (48 dims)")
-                        st.pyplot(fig)
-                        st.write("Phân bố màu sắc giúp phân biệt biển báo Đỏ (cấm) và Xanh (chỉ dẫn).")
-
-                    st.subheader("2. Giải thích Thuật toán (Algorithms Explained)")
-                    
-                    tab1, tab2 = st.tabs(["Cơ chế HOG", "Cơ chế SVM"])
-                    
-                    with tab1:
-                        st.latex(r"G = \sqrt{G_x^2 + G_y^2}, \quad \theta = \arctan\left(\frac{G_y}{G_x}\right)")
-                        st.write("""
-                        HOG chia ảnh thành các ô (cells) 4x4 pixels. Với mỗi ô, nó tính toán độ lớn gradient và hướng của nó.
-                        Các hướng này được gom vào 9 bins (0-180°). 
-                        - **Kích thước vector**: 32x32 pixels / 4x4 cells = 8x8 blocks. 
-                        - Mỗi block 2x2 cells có $4 \times 9 = 36$ đặc trưng.
-                        - Tổng cộng: $7 \times 7 \times 36 = 1764$ đặc trưng HOG.
-                        """)
-
-                    with tab2:
-                        st.latex(r"f(x) = \text{sgn}\left( \sum_{i=1}^{n} \alpha_i y_i K(x_i, x) + b \right)")
-                        st.write("""
-                        SVM tìm kiếm một siêu phẳng (hyperplane) tối ưu trong không gian 1812 chiều để phân tách các lớp biển báo.
-                        Hàm Kernel được sử dụng là **RBF (Radial Basis Function)**:
-                        """)
-                        st.latex(r"K(x_i, x_j) = \exp(-\gamma ||x_i - x_j||^2)")
-                        st.write("Độ tin cậy được tính dựa trên khoảng cách từ vector đặc trưng tới siêu phẳng quyết định.")
+                        st.info("**SVM classification**")
+                        st.latex(r"w^T \cdot \phi(x) + b = 0")
+                        st.write(f"SVM sử dụng Kernel tuyến tính để phân loại vector 256 chiều này. Độ tin cậy được tính bằng khoảng cách tới siêu mặt phẳng quyết định.")
 
                     st.subheader("3. Dữ liệu số (Numerical Trace)")
-                    st.write(f"Vector đặc trưng đầu vào (Trích đoạn 20/1812 chiều):")
-                    st.code(features[0][:20])
+                    # Lấy thử feature vector từ CNN để hiển thị
+                    deep_feats = cnn_extractor.predict(img_batch, verbose=0)
+                    st.write(f"Vector đặc trưng sâu (Trích đoạn 20/256 chiều):")
+                    st.code(deep_feats[0][:20])
+                    st.write(f"Giá trị Margin lớn nhất tìm thấy: **{confidence:.4f}**")
 
 if __name__ == "__main__":
     main()
