@@ -14,4 +14,7 @@
 | ISS009 | RuntimeError: Data is outside [0.0, 1.0] in HOG visualization | Thêm tham số `clamp=True` vào lệnh `st.image`. | Hoàn thành v4.1 |
 | ISS010 | Mô hình bị Overfitting trên tập Train/Test (Đạt 91%+ nhưng sai trên ảnh lạ) | Do $C=100.0$ quá cao và thiếu Data Augmentation. | Đã chẩn đoán (Xem docs) |
 | ISS011 | InconsistentVersionWarning: scikit-learn mismatch (1.5.1 vs 1.6.1) | Phân tích log terminal. | Nâng cấp scikit-learn lên 1.6.1 nếu gặp lỗi logic. |
-| ISS012 | Hiện tượng "Đốm ma" (False Positives) dày đặc khi quét Deep Scan | Thêm bộ lọc Solidity, Laplacian và siết ngưỡng SVM. | Hoàn thành v4.6 (Ghost Hunter) |
+| ISS012 | Hiện tượng "Đốm ma" (False Positives) dày đặc khi quét Deep Scan | - **Lọc hình học (Solidity):** Biển báo là vật thể đặc. Tuy nhiên, một số biển có họa tiết trắng lớn (biển Cấm Đi Ngược Chiều) có thể làm giảm Solidity. Ngưỡng 0.35 - 0.4 là điểm cân bằng tốt.
+- **Độ rực rỡ (Saturation Filter):** Biển báo thật được thiết kế để gây chú ý với màu sắc cực kỳ rực rỡ. Trung bình kênh Saturation > 50 là một bộ lọc "diệt nhiễu" cực mạnh cho các vật thể tự nhiên (lá cây, đất).
+- **Morphology Closing (9x9):** Giúp nối liền các mảng màu bị chia cắt bởi text hoặc họa tiết trắng bên trong biển báo. | Hoàn thành v4.6 |
+| ISS013 | Biển to bị sót (False Negatives), biển nhỏ bị nhầm | Tăng Morphology (9x9), thêm lọc Saturation, Laplacian trên ảnh gốc. | Hoàn thành v4.7 |
