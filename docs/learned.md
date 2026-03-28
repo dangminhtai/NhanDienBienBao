@@ -4,6 +4,9 @@
 - **Kiến trúc Lai ghép**: Cách kết hợp CNN làm bộ trích xuất đặc trưng (Feature Extractor) và SVM làm bộ phân loại (Classifier) mang lại độ chính xác cao hơn và khả năng bao quát tốt hơn HOG.
 - **Tiền xử lý CNN**: Quy trình chuẩn hóa ảnh đơn giản (Resize 32x32, normalize 0-1) nhưng cực kỳ quan trọng để khớp với dữ liệu huấn luyện.
 - **Tích hợp Keras trong Streamlit**: Cần sử dụng `@st.cache_resource` để tránh việc tải lại mô hình CNN nặng nề mỗi khi người dùng tương tác.
+- **Bảo toàn độ phân giải (v5.2):** Loại bỏ logic downscaling (800px) giúp hệ thống "nhìn thấy" các biển báo nhỏ (20-30px) ở xa cực kỳ hiệu quả. Tuy nhiên đánh đổi bằng thời gian xử lý ảnh 4K tăng lên (~1-2s).
+- **Unicode OpenCV (v6.0):** `cv2.putText` không hỗ trợ Unicode. Luôn luôn dùng PIL để vẽ chữ tiếng Việt trước khi hiển thị trên Streamlit.
+- **Trực quan hóa (v6.1):** Việc thêm ảnh "Meta" giúp kiểm chứng độ chính xác của mô hình ngay lập tức bằng mắt thường, tăng tính minh bạch toán học.
 - **Morphology Closing (9x9):** Giúp nối liền các mảng màu bị chia cắt bởi text hoặc họa tiết trắng bên trong biển báo.
 - **Bài học về sự cân bằng (v4.8):** Cài đặt bộ lọc quá chặt (Laplacian 100, SVM 0.5) sẽ dẫn đến Under-detection. Ngưỡng Laplacian 40-50 và Saturation 30 là "điểm ngọt" để vừa giữ biển vừa diệt nhiễu.
 - **Minh bạch toán học**: Việc giải thích cơ chế "Deep Features" giúp người dùng tin tưởng hơn vào kết quả của mô hình "Hộp đen".

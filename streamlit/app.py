@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 import matplotlib.pyplot as plt
 import cv2
+import time
 
 # Import các module nội bộ từ thư mục src/
 from src.data_processor import preprocess_image_for_cnn
@@ -52,10 +53,10 @@ def main():
     
     st.sidebar.markdown("---")
     
-    # Tham số Detection (Chỉ hiện khi ở chế độ Full Image)
+    # Tham số Detection (Chỉ hiện khi ở chế độ Full Image hoặc Batch Mode)
     det_params = {}
-    if app_mode == "Phát hiện & Nhận diện (Full Image)":
-        st.sidebar.subheader("🛠️ Cấu hình Detetion")
+    if app_mode in ["Phát hiện & Nhận diện (Full Image)", "Quét Thư mục (Batch Mode)"]:
+        st.sidebar.subheader("🛠️ Cấu hình Detection")
         det_params['min_s'] = st.sidebar.slider("Độ bão hòa tối thiểu (Saturation)", 0, 255, 80)
         det_params['min_v'] = st.sidebar.slider("Độ sáng tối thiểu (Value)", 0, 255, 80)
         det_params['min_size'] = st.sidebar.slider("Kích thước tối thiểu (Px)", 10, 200, 30)
@@ -83,7 +84,7 @@ def main():
     # 2. Logic theo Chế độ hoạt động
     if app_mode == "Quét Thư mục (Batch Mode)":
         st.header("📂 Chế độ quét hàng loạt")
-        folder_path = st.text_input("Nhập đường dẫn thư mục ảnh:", value=r"f:\X-FILE\Code_UNI\Python\Math for AI\CuoiKy\NhanDienBienBao\TestIJCNN2013Download")
+        folder_path = st.text_input("Nhập đường dẫn thư mục ảnh:", value=r"f:\X-FILE\Code_UNI\Python\Math for AI\CuoiKy\NhanDienBienBao\Tests")
         
         if st.button("🚀 BẮT ĐẦU QUÉT THƯ MỤC"):
             if os.path.isdir(folder_path):
@@ -147,14 +148,24 @@ def main():
                     st.subheader("🖼️ Kết quả chi tiết:")
                     for res in all_results:
                         with st.expander(f"File: {res['filename']} - Tìm thấy {len(res['detections'])} biển báo"):
-                            img_res = cv2.imread(res['path'])
+                            img_bgr_res = cv2.imread(res['path'])
+                            img_pil_res = Image.fromarray(cv2.cvtColor(img_bgr_res, cv2.COLOR_BGR2RGB))
+                            draw = ImageDraw.Draw(img_pil_res)
+                            
                             for det in res['detections']:
                                 x, y, w, h = det['box']
-                                cv2.rectangle(img_res, (x, y), (x+w, y+h), (0, 255, 0), 5)
-                                result_text = f"{det['label']} ({det['conf']:.1f}%)"
-                                cv2.putText(img_res, result_text, (x, y-10), 
-                                            cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
-                            st.image(cv2.cvtColor(img_res, cv2.COLOR_BGR2RGB), use_container_width=True)
+                                # Vẽ khung chữ nhật
+                                draw.rectangle([x, y, x+w, y+h], outline=(0, 255, 0), width=5)
+                                # Vẽ nhãn Tiếng Việt
+                                label_text = f"{det['label']} ({det['conf']:.1f}%)"
+                                img_pil_res = draw_vietnamese_text(img_pil_res, label_text, (x, y-35), font_size=30)
+                                
+                                # Hiện meta mẫu vào expander
+                                meta_path = os.path.join(current_dir, "dataset", "Meta", f"{det['id']}.png")
+                                if os.path.exists(meta_path):
+                                    st.image(meta_path, width=80, caption=f"Biển chuẩn #{det['id']}")
+                            
+                            st.image(img_pil_res, use_container_width=True)
             else:
                 st.error("Đường dẫn không tồn tại!")
 
@@ -183,6 +194,13 @@ def main():
                                 <div class="label-id">NHÃN: #{prediction_id} | ĐỘ TIN CẬY: {confidence:.2f}</div>
                             </div>
                         """, unsafe_allow_html=True)
+                        
+                        # --- THÊM ẢNH META MINH HỌA ---
+                        meta_path = os.path.join(current_dir, "dataset", "Meta", f"{prediction_id}.png")
+                        if os.path.exists(meta_path):
+                            col_m1, col_m2, col_m3 = st.columns([1, 0.5, 1])
+                            with col_m2:
+                                st.image(meta_path, caption=f"Ảnh mẫu (Chuẩn)", use_container_width=True)
                         st.balloons()
 
             elif app_mode == "Phát hiện & Nhận diện (Full Image)":
@@ -194,7 +212,6 @@ def main():
                     )
                     
                     if st.button("🚀 BẮT ĐẦU QUÉT TOÀN CẢNH"):
-                        import time
                         start_time = time.time()
                         with st.spinner('Đang thực hiện quét đa sắc...'):
                             img_bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
@@ -248,6 +265,10 @@ def main():
                                     with cols[idx % 4]:
                                         x, y, w, h = res["box"]
                                         st.image(image.crop((x, y, x+w, y+h)), use_container_width=True)
+                                        # Hiển thị meta mẫu nhỏ bên dưới
+                                        meta_path = os.path.join(current_dir, "dataset", "Meta", f"{res['id']}.png")
+                                        if os.path.exists(meta_path):
+                                             st.image(meta_path, caption=f"Mẫu #{res['id']}", width=60)
                                         st.write(f"**{res['label']}**")
                                         st.write(f"Độ tin cậy: {res['conf']:.2f}")
 

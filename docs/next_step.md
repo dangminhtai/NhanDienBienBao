@@ -1,18 +1,14 @@
-# Các bước tiếp theo (Next Steps) - Lộ trình v4.1+
+# Tiếp theo thực hiện (Next Steps)
 
-## Cải tiến Thuật toán (Algorithm Improvements)
-- **YOLO Integration**: Chuyển đổi từ SVM-HOG scanning sang YOLOv8/v11 để đạt tốc độ real-time và độ chính xác cao hơn trong tác vụ Detection.
-- **Data Augmentation**: Bổ sung các phép biến đổi về ánh sáng và nhiễu (GTSDB thường có ảnh chất lượng thấp hơn GTSRB) để detector hoạt động ổn định hơn.
-- **Ensemble Model**: Kết hợp nhiều kiến trúc CNN (MobileNet, ResNet) làm feature extractor để tăng cường độ tin cậy.
-- [ ] Thêm tính năng "Vẽ Heatmap" cho các vùng màu đang được quét để trực quan hóa Deep Scan.
-- [ ] Huấn luyện lại SVM Binary với nhiều ảnh "Hard Negatives" (lá cây, bóng đổ) để tăng độ nhạy tự nhiên.
-- [ ] Tích hợp YOLOv11 để thay thế hoàn toàn bộ quét HSV cổ điển (Long term).
+1. **[REQ005] Xuất báo cáo Batch Mode:**
+    - Cho phép anh tải file CSV chứa danh sách: `Tên file | Nhãn | Độ tin cậy | Tọa độ Box`.
+    - Điều này rất quan trọng để anh làm báo cáo cuối kỳ.
 
-## Cải tiến Ứng dụng (App Improvements)
-- **WebCam Real-time**: Sử dụng `streamlit-webrtc` để hỗ trợ nhận diện trực tiếp qua camera thay vì chỉ tải ảnh lên.
-- **History Tracking**: Lưu trữ lịch sử nhận diện và xuất báo cáo CSV/PDF.
-- **Multilingual UI**: Hỗ trợ đa ngôn ngữ hoàn chỉnh (Vietnamese, English, German).
+2. **[OPT001] Tăng tốc Batch Mode:**
+    - Hiện tại quét ~300 ảnh mất khoảng 40-50s. Nếu dùng đa luồng (Multi-threading) có thể giảm xuống còn 10-15s.
 
-## Triển khai (Deployment)
-- **Dockerization**: Đóng gói ứng dụng vào Docker container để dễ dàng triển khai lên Cloud (AWS, Azure, Heroku).
-- **Optimization**: Chuyển đổi mô hình sang định dạng ONNX hoặc TensorFlow Lite để chạy nhanh hơn trên các thiết bị tài nguyên yếu.
+3. **[FEAT001] Tích hợp YOLO Lite:**
+    - Nếu anh muốn độ chính xác 100% cho các biển báo trùng lặp hoặc sát nhau, em có thể chuẩn bị một bản hướng dẫn training YOLO nhẹ để thay thế hoàn toàn bộ quét HSV hiện tại.
+
+4. **[UI001] Dark Mode Optimization:**
+    - Tinh chỉnh CSS để giao diện trông "ngầu" hơn nữa khi anh bật Dark Mode của trình duyệt.
