@@ -59,7 +59,7 @@ def main():
         det_params['min_s'] = st.sidebar.slider("Độ bão hòa tối thiểu (Saturation)", 0, 255, 80)
         det_params['min_v'] = st.sidebar.slider("Độ sáng tối thiểu (Value)", 0, 255, 80)
         det_params['min_size'] = st.sidebar.slider("Kích thước tối thiểu (Px)", 10, 200, 30)
-        auto_tune = st.sidebar.checkbox("Chế độ Hyper-Scan (Siêu quét 225 vòng)", value=True, help="Hệ thống quét mịn 225 tổ hợp màu sắc để không bỏ sót bất kỳ biển mãu nào.")
+        auto_tune = st.sidebar.checkbox("Chế độ Hyper-Scan (Siêu quét 16 vòng)", value=False, help="Hệ thống quét mịn 16 tổ hợp màu sắc. Tạm tắt để anh tự cấu hình tay.")
         show_debug = st.sidebar.checkbox("Hiện mặt nạ quét màu (Debug Mask)", value=False)
     
     st.sidebar.markdown(f"""

@@ -211,21 +211,48 @@ class TrafficSignDetector:
         return self._get_raw_candidates_from_mask(image_bgr, mask, min_size)
 
     def _get_raw_candidates_from_mask(self, image_bgr, mask, min_size):
-        """Trích xuất raw candidates từ một binary mask."""
+        """Trích xuất raw candidates từ một binary mask với các bộ lọc v5.0."""
+        # Áp dụng CLAHE một lần nữa cho ROI để đồng nhất với lúc train (tùy chọn)
+        image_normalized = self._apply_clahe(image_bgr)
+        h, w = image_bgr.shape[:2]
+        
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         candidates = []
         for cnt in contours:
-            x, y, w, h = cv2.boundingRect(cnt)
-            aspect_ratio = w / float(h)
-            if w > min_size and h > min_size and 0.6 < aspect_ratio < 1.4:
-                roi = image_bgr[y:y+h, x:x+w]
+            x, y, w_box, h_box = cv2.boundingRect(cnt)
+            aspect_ratio = w_box / float(h_box)
+            
+            if w_box >= min_size and h_box >= min_size and 0.6 < aspect_ratio < 1.4:
+                # 1. [GEOMETRY] Solidity check
+                area_cnt = cv2.contourArea(cnt)
+                if area_cnt < (w_box * h_box * 0.30): continue
+                
+                y_end, x_end = min(y+h_box, h), min(x+w_box, w)
+                roi = image_normalized[y:y_end, x:x_end]
                 if roi.size == 0: continue
+                
+                # 2. [VIBRANCE + DENSITY] Lọc đốm nhiễu 
+                roi_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+                avg_s = np.mean(roi_hsv[:,:,1])
+                if avg_s < 30: continue 
+                
+                _, s_map, _ = cv2.split(roi_hsv)
+                high_s_ratio = np.sum(s_map > 50) / float(roi.size / 3)
+                if high_s_ratio > 0.95: continue 
+                
+                # 3. [FOCUS] Kiểm tra độ nét trên ROI gốc
+                roi_gray_full = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                lap_var = cv2.Laplacian(roi_gray_full, cv2.CV_64F).var()
+                if lap_var < 40: continue 
+                
+                # 4. [HOG + SVM]
                 roi_resized = cv2.resize(roi, (32, 32))
                 roi_gray = cv2.cvtColor(roi_resized, cv2.COLOR_BGR2GRAY)
                 features = hog(roi_gray, **self.hog_params)
                 features_scaled = self.scaler.transform(features.reshape(1, -1))
+                
                 if self.model.predict(features_scaled)[0] == 1:
                     score = self.model.decision_function(features_scaled)[0]
-                    if score > -0.5:
-                        candidates.append(((x, y, w, h), score))
+                    if score > 0.0:
+                        candidates.append(((x, y, w_box, h_box), score))
         return candidates
