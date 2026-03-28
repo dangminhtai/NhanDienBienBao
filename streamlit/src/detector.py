@@ -44,7 +44,7 @@ class TrafficSignDetector:
         blue_mask = cv2.inRange(hsv_img, lower_blue, upper_blue)
         
         # Màu vàng (Tối ưu để bắt biển DIAMOND, loại bỏ lá cây xanh/nâu)
-        lower_yellow = np.array([17, max(40, min_s), max(40, min_v)])
+        lower_yellow = np.array([17, min_s, min_v])
         upper_yellow = np.array([33, 255, 255])
         yellow_mask = cv2.inRange(hsv_img, lower_yellow, upper_yellow)
 
@@ -136,9 +136,9 @@ class TrafficSignDetector:
                     for cnt in contours:
                         xs, ys, ws, hs = cv2.boundingRect(cnt)
                         if ws >= target_min_size_small and hs >= target_min_size_small:
-                            # 1. [GEOMETRY] Solidity > 0.35 (Cho phép biển có họa tiết trắng lớn)
+                            # 1. [GEOMETRY] Solidity > 0.3 (Cho phép biển có họa tiết trắng lớn)
                             area = cv2.contourArea(cnt)
-                            if area < (ws * hs * 0.35): continue 
+                            if area < (ws * hs * 0.30): continue 
                             
                             x, y = int(xs / scale), int(ys / scale)
                             w_full, h_full = int(ws / scale), int(hs / scale)
@@ -148,20 +148,20 @@ class TrafficSignDetector:
                             if box_key in seen_boxes: continue
                             
                             aspect_ratio = w_full / float(h_full)
-                            if 0.65 < aspect_ratio < 1.35:
+                            if 0.6 < aspect_ratio < 1.4:
                                 y_end, x_end = min(y+h_full, h), min(x+w_full, w)
                                 roi = image_normalized[y:y_end, x:x_end]
                                 if roi.size == 0: continue
                                 
-                                # 2. [VIBRANCE] Kiểm tra độ rực rỡ (Bỏ qua màu xỉn/lá cây mờ)
+                                # 2. [VIBRANCE] Kiểm tra độ rực rỡ (Nới lỏng xuống 30)
                                 roi_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
                                 avg_s = np.mean(roi_hsv[:,:,1])
-                                if avg_s < 50: continue # Biển báo thật thường rất rực rỡ
+                                if avg_s < 30: continue # Biển báo thật thường rất rực rỡ
                                 
-                                # 3. [FOCUS] Kiểm tra độ nét trên ROI gốc (Size lớn chính xác hơn 32x32)
+                                # 3. [FOCUS] Kiểm tra độ nét (Nới lỏng xuống 40)
                                 roi_gray_full = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
                                 lap_var = cv2.Laplacian(roi_gray_full, cv2.CV_64F).var()
-                                if lap_var < 100: continue # Biển báo kim loại luôn có texture sắc nét
+                                if lap_var < 40: continue # Biển báo kim loại luôn có texture sắc nét
                                 
                                 roi_resized = cv2.resize(roi, (32, 32))
                                 roi_gray = cv2.cvtColor(roi_resized, cv2.COLOR_BGR2GRAY)
@@ -170,8 +170,8 @@ class TrafficSignDetector:
                                 
                                 if self.model.predict(features_scaled)[0] == 1:
                                     score = self.model.decision_function(features_scaled)[0]
-                                    # 3. [GHOST FILTER] Ngưỡng SVM nghiêm ngặt (>0.5)
-                                    if score > 0.5:
+                                    # 4. [SVM] Trả về ngưỡng 0.0 tiêu chuẩn
+                                    if score > 0.0:
                                         all_candidates.append(((x, y, w_full, h_full), score))
                                         seen_boxes.add(box_key)
 
