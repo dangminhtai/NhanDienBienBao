@@ -15,6 +15,10 @@
 | ISS010 | Mô hình bị Overfitting trên tập Train/Test (Đạt 91%+ nhưng sai trên ảnh lạ) | Do $C=100.0$ quá cao và thiếu Data Augmentation. | Đã chẩn đoán (Xem docs) |
 | ISS011 | InconsistentVersionWarning: scikit-learn mismatch (1.5.1 vs 1.6.1) | Phân tích log terminal. | Nâng cấp scikit-learn lên 1.6.1 nếu gặp lỗi logic. |
 | ISS012 | Hiện tượng "Đốm ma" (False Positives) dày đặc khi quét Deep Scan | - **Lọc hình học (Solidity):** Biển báo là vật thể đặc. Tuy nhiên, một số biển có họa tiết trắng lớn (biển Cấm Đi Ngược Chiều) có thể làm giảm Solidity. Ngưỡng 0.35 - 0.4 là điểm cân bằng tốt.
-- **Độ rực rỡ (Saturation Filter):** Biển báo thật được thiết kế để gây chú ý với màu sắc cực kỳ rực rỡ. Trung bình kênh Saturation > 50 là một bộ lọc "diệt nhiễu" cực mạnh cho các vật thể tự nhiên (lá cây, đất).
+- **Bài học về sự cân bằng (v4.8):** Cài đặt bộ lọc quá chặt sẻ dẫn đến Under-detection. Ngưỡng Laplacian 40-50 và Saturation 30 là "điểm ngọt".
+- **Gỡ bỏ seen_boxes (v5.0):** Việc chặn trùng lặp bằng tọa độ thô trong vòng lặp quét có thể làm mất các ứng viên tốt hơn xuất hiện ở các tổ hợp HSV sau. Để NMS xử lý toàn bộ là phương án an toàn nhất.
+- **Lọc Mật độ màu (High Saturation Ratio):** Biển báo thật luôn có sự đan xen màu sắc (đỏ-trắng, xanh-trắng). Một vùng ảnh có >95% là màu bão hòa cao thường là nhiễu quang học (đốm sáng) chứ không phải biển báo.
+" cực mạnh cho các vật thể tự nhiên (lá cây, đất).
 - **Morphology Closing (9x9):** Giúp nối liền các mảng màu bị chia cắt bởi text hoặc họa tiết trắng bên trong biển báo. | Hoàn thành v4.6 |
 | ISS013 | Biển to bị sót (False Negatives), biển nhỏ bị nhầm | Tăng Morphology (9x9), nới lỏng Laplacian/Saturation/SVM về mức cân bằng. | Hoàn thành v4.8 |
+| ISS014 | Đốm ma chiếm chỗ biển thật (Case 3), Không thấy biển (Case 2) | Gỡ bỏ seen_boxes, mở rộng lưới quét 4x4, thêm lọc mật độ màu >95%. | Hoàn thành v5.0 |
