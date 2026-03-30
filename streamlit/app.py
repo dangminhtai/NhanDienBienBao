@@ -308,26 +308,72 @@ Loại bỏ vùng ảnh không liên quan như bầu trời, mặc đường câ
                     
                     # Vẽ khoanh vùng phác thảo (Drawing Bounding Boxes)
                     contours, _ = cv2.findContours(mask_final, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    
+                    # Ảnh 3: Vẽ box trên nền Đen/Trắng (để User thấy bản chất)
+                    mask_boxed = cv2.cvtColor(mask_final, cv2.COLOR_GRAY2BGR)
+                    # Ảnh 4: Vẽ box trên nền Ảnh màu
                     preview_contours = img_clahe_bgr.copy()
+                    
                     for cnt in contours:
                         x, y, w_box, h_box = cv2.boundingRect(cnt)
-                        # Vẽ mờ các ứng viên tiềm năng (trước khi lọc hình học)
+                        # Vẽ khung xanh để User thấy cách máy tính "bao vây" hòn đảo trắng
+                        cv2.rectangle(mask_boxed, (x, y), (x + w_box, y + h_box), (0, 255, 0), 2)
                         cv2.rectangle(preview_contours, (x, y), (x + w_box, y + h_box), (0, 255, 255), 2)
                     
                     preview_contours_pil = Image.fromarray(cv2.cvtColor(preview_contours, cv2.COLOR_BGR2RGB))
 
-                    c3_1, c3_2, c3_3, c3_4 = st.columns(4)
+                    c3_1, c3_2, c3_3, c3_4, c3_5 = st.columns(5)
                     with c3_1:
                         st.image(mask_combined, caption="1. Mặt nạ gốc (Từ Bước 2)", use_container_width=True, clamp=True)
                     with c3_2:
-                        st.image(mask_closed, caption="2. Vá lỗ hổng (Morphology Close)", use_container_width=True, clamp=True)
+                        st.image(mask_closed, caption="2. Vá lỗ hổng (Close)", use_container_width=True, clamp=True)
                     with c3_3:
-                        st.image(mask_final, caption="3. Tẩy hạt bụi (Morphology Open)", use_container_width=True, clamp=True)
+                        st.image(mask_final, caption="3. Tẩy hạt bụi (Open)", use_container_width=True, clamp=True)
                     with c3_4:
-                        st.image(preview_contours_pil, caption="4. Vẽ ranh giới ứng viên", use_container_width=True)
+                        st.image(mask_boxed, caption="4. Bản chất khoanh Box nhị phân", use_container_width=True, clamp=True)
+                    with c3_5:
+                        st.image(preview_contours_pil, caption="5. Trích xuất ứng viên Màu", use_container_width=True)
                         
                     st.info("""
-**Bước 3:** Gắn kết các mảng màu rời rạc (do bị chữ hoặc ký hiệu trên biển báo chia cắt) thành một khối thống nhất, tẩy sạch các đốm nhiễu li ti, sau đó khoanh vùng tất cả các vị trí nghi ngờ để chuẩn bị đi "hỏi ý kiến" trí tuệ nhân tạo ở các bước sau.
+Biển báo thường có chữ hoặc hình vẽ màu đen/trắng ở lõi, mô hình sẽ hiểu biển báo là mảnh vỡ li ti rời rạc. Do vậy cần vá lỗ hổng. Việc xóa nhiễu (tẩy hạt bụi) để tránh mô hình dự đoán sai. Cuối cùng dùng findContours & boundingRect ở CV2 để phân vùng và xác định khung hình chữ nhật.                    """)
+                    st.divider()
+
+                    # --- TRỰC QUAN HÓA BƯỚC 4 (GEOMETRY FILTERING) ---
+                    st.write("### 📸 Bước 4: Sát hạch Hình học (Geometry Filter)")
+                    
+                    # Mô phỏng phẫu thuật Bước 4
+                    geo_passed_img = img_clahe_bgr.copy()
+                    geo_rejected_img = img_clahe_bgr.copy()
+                    
+                    geo_passed_count = 0
+                    geo_rejected_count = 0
+                    
+                    for cnt in contours:
+                        x, y, w_box, h_box = cv2.boundingRect(cnt)
+                        aspect_ratio = w_box / float(h_box)
+                        area_cnt = cv2.contourArea(cnt)
+                        solidity = area_cnt / float(w_box * h_box)
+                        
+                        # Điều kiện sát hạch
+                        is_size_ok = w_box >= det_params['min_size'] and h_box >= det_params['min_size']
+                        is_ratio_ok = 0.6 < aspect_ratio < 1.4
+                        is_solid_ok = solidity > 0.3
+                        
+                        if is_size_ok and is_ratio_ok and is_solid_ok:
+                            cv2.rectangle(geo_passed_img, (x, y), (x + w_box, y + h_box), (0, 255, 0), 2)
+                            geo_passed_count += 1
+                        else:
+                            cv2.rectangle(geo_rejected_img, (x, y), (x + w_box, y + h_box), (0, 0, 255), 2)
+                            geo_rejected_count += 1
+
+                    c4_1, c4_2 = st.columns(2)
+                    with c4_1:
+                        st.image(geo_rejected_img, caption=f"1. Loại bỏ {geo_rejected_count} nghi can (Sai hình dáng/kích thước)", use_container_width=True)
+                    with c4_2:
+                        st.image(geo_passed_img, caption=f"2. {geo_passed_count} ứng viên vượt qua vòng Hình học", use_container_width=True)
+                        
+                    st.info(f"""
+**Bước 4:** Đây là vòng "Phỏng vấn hình dáng". Biển báo phải có hình vuông, tròn hoặc tam giác đều (Tỷ lệ 0.6 - 1.4) và phải là một khối đặc chứ không phải là những đường kẻ uốn lượn hay cành cây (Độ đặc > 30%). Những ai quá dài, quá dẹt hoặc rỗng tuếch sẽ bị "đánh trượt" ngay lập tức để tiết kiệm sức cho AI ở các vòng sau.
                     """)
                     st.divider()
                     
