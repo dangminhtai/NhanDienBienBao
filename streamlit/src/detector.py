@@ -105,7 +105,7 @@ class TrafficSignDetector:
         return cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
 
     def detect(self, image_bgr, min_s=80, min_v=80, min_size=32, nms_threshold=0.3, return_mask=False, auto_tune=False,
-               min_ratio=0.6, max_ratio=1.4, min_solidity=0.3):
+               min_ratio=0.6, max_ratio=1.4, min_solidity=0.3, min_laplacian=40):
         """
         Sơ đồ thực hiện: [Hyper Turbo-Scan] -> Grid Mask -> SVM -> NMS
         Returns: (final_boxes, mask, stats) if return_mask else (final_boxes, stats)
@@ -199,8 +199,9 @@ class TrafficSignDetector:
         raw_contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         stats['hsv_cnt'] = len(raw_contours)
         
-        candidates = self._get_raw_candidates_from_mask(image_bgr, mask, min_size, 
-                                                        min_ratio=min_ratio, max_ratio=max_ratio, min_solidity=min_solidity)
+        candidates = self._get_raw_candidates(image_normalized, min_s, min_v, min_size,
+                                              min_ratio=min_ratio, max_ratio=max_ratio, 
+                                              min_solidity=min_solidity, min_laplacian=min_laplacian)
         # Vì _get_raw_candidates_from_mask gọi các bước nội bộ, ta chỉ lấy svm_pass là chính
         stats['svm_pass'] = len(candidates)
         
@@ -215,14 +216,14 @@ class TrafficSignDetector:
         return final_boxes, stats
 
 
-    def _get_raw_candidates(self, image_bgr, s, v, min_size, min_ratio=0.6, max_ratio=1.4, min_solidity=0.3):
+    def _get_raw_candidates(self, image_bgr, s, v, min_size, min_ratio=0.6, max_ratio=1.4, min_solidity=0.3, min_laplacian=40):
         """Hàm nội bộ để lấy raw candidates từ các ngưỡng cụ thể."""
         hsv = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
         mask = self._get_hsv_mask(hsv, s, v)
         mask = self._preprocess_mask(mask)
-        return self._get_raw_candidates_from_mask(image_bgr, mask, min_size, min_ratio, max_ratio, min_solidity)
+        return self._get_raw_candidates_from_mask(image_bgr, mask, min_size, min_ratio, max_ratio, min_solidity, min_laplacian)
 
-    def _get_raw_candidates_from_mask(self, image_bgr, mask, min_size, min_ratio=0.6, max_ratio=1.4, min_solidity=0.3):
+    def _get_raw_candidates_from_mask(self, image_bgr, mask, min_size, min_ratio=0.6, max_ratio=1.4, min_solidity=0.3, min_laplacian=40):
         """Trích xuất raw candidates từ một binary mask với các bộ lọc v5.0."""
         # Áp dụng CLAHE một lần nữa cho ROI để đồng nhất với lúc train (tùy chọn)
         image_normalized = self._apply_clahe(image_bgr)
@@ -253,9 +254,10 @@ class TrafficSignDetector:
                 if high_s_ratio > 0.95: continue 
                 
                 # 3. [FOCUS] Kiểm tra độ nét trên ROI gốc
-                roi_gray_full = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-                lap_var = cv2.Laplacian(roi_gray_full, cv2.CV_64F).var()
-                if lap_var < 40: continue 
+                if min_laplacian > 0:
+                    roi_gray_full = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                    lap_var = cv2.Laplacian(roi_gray_full, cv2.CV_64F).var()
+                    if lap_var < min_laplacian: continue 
                 
                 # 4. [HOG + SVM]
                 roi_resized = cv2.resize(roi, (32, 32))
