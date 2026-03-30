@@ -79,7 +79,7 @@ def main():
         st.sidebar.write("### 📸 Tùy chỉnh Chất lượng (Bước 5)")
         det_params['min_laplacian'] = st.sidebar.slider(
             "Độ nét Laplacian (0 = Tắt)", 
-            0, 100, 40, 5,
+            0, 4000, 40, 5,
             help="Lọc các vùng bị mờ nhòe. Kéo về 0 để Tắt bước này nếu ảnh luôn sắc nét."
         )
         
@@ -414,6 +414,9 @@ Biển báo thường có chữ hoặc hình vẽ màu đen/trắng ở lõi, m�
                         focus_passed_count = 0
                         focus_rejected_count = 0
                         
+                        passed_rois = []
+                        rejected_rois = []
+                        
                         for cnt in contours:
                             x, y, w_box, h_box = cv2.boundingRect(cnt)
                             
@@ -436,27 +439,46 @@ Biển báo thường có chữ hoặc hình vẽ màu đen/trắng ở lõi, m�
                                 # Tính điểm Sắc nét (Phương sai Laplacian)
                                 laplacian_var = cv2.Laplacian(gray_roi, cv2.CV_64F).var()
                                 
-                                # Nếu điểm < min_laplacian nghĩa là Ảnh Mờ
                                 score_text = f"{laplacian_var:.0f}"
-                                text_y = max(y - 5, 15)
+                                roi_rgb = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
+                                
+                                # Nếu điểm < min_laplacian nghĩa là Ảnh Mờ
                                 if laplacian_var < det_params['min_laplacian']:
                                     cv2.rectangle(focus_rejected_img, (x, y), (x + w_box, y + h_box), (0, 0, 255), 2)
-                                    cv2.putText(focus_rejected_img, score_text, (x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
                                     focus_rejected_count += 1
+                                    if len(rejected_rois) < 5:
+                                        rejected_rois.append((roi_rgb, score_text))
                                 else:
                                     cv2.rectangle(focus_passed_img, (x, y), (x + w_box, y + h_box), (0, 255, 0), 2)
-                                    cv2.putText(focus_passed_img, score_text, (x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                                    
                                     cv2.rectangle(focus_rejected_img, (x, y), (x + w_box, y + h_box), (0, 255, 0), 2)
-                                    cv2.putText(focus_rejected_img, score_text, (x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                                     focus_passed_count += 1
+                                    if len(passed_rois) < 5:
+                                        passed_rois.append((roi_rgb, score_text))
 
                         c5_1, c5_2 = st.columns(2)
                         with c5_1:
-                            st.image(focus_rejected_img, channels="BGR", caption=f"1. Khám thị lực ({focus_passed_count + focus_rejected_count} nghi can) -> 🔴 Đỏ: Bị loại (Độ nét < {det_params['min_laplacian']})", use_container_width=True)
+                            st.image(focus_rejected_img, channels="BGR", caption=f"1. Khám thị lực ({focus_passed_count + focus_rejected_count} nghi can)", use_container_width=True)
                         with c5_2:
                             st.image(focus_passed_img, channels="BGR", caption=f"2. {focus_passed_count} Ứng viên Đạt chuẩn (Sắc nét)", use_container_width=True)
                             
+                        # Phóng to Nội soi 
+                        if passed_rois or rejected_rois:
+                            st.write("#### 🔎 Soi cận cảnh: Ứng viên Mờ tịt (Trượt) vs Sắc nét (Đậu)")
+                            c_roi_1, c_roi_2 = st.columns(2)
+                            with c_roi_1:
+                                if rejected_rois:
+                                    st.caption(f"Trượt (Điểm < {det_params['min_laplacian']})")
+                                    cols_r = st.columns(len(rejected_rois))
+                                    for i, (r_img, score) in enumerate(rejected_rois):
+                                        with cols_r[i]:
+                                            st.image(r_img, caption=f"❌ {score}")
+                            with c_roi_2:
+                                if passed_rois:
+                                    st.caption(f"Đậu (Điểm >= {det_params['min_laplacian']})")
+                                    cols_p = st.columns(len(passed_rois))
+                                    for i, (r_img, score) in enumerate(passed_rois):
+                                        with cols_p[i]:
+                                            st.image(r_img, caption=f"✅ {score}")                            
                         st.info(f"""
     **Bước 5:** Phép toán **Laplacian** tính toán "độ sắc cạnh" của chùm pixel. Bạn đã đặt tiêu chuẩn Độ nét = **{det_params['min_laplacian']}**. Các đốm ảnh mờ, nhòe (bokeh, phản chiếu nước) không có cạnh sắc sẽ bị loại bỏ để giảm tải cho AI. (Kéo về 0 ở Sidebar để TẮT vòng kiểm tra này nếu ảnh quá rõ).
                         """)
