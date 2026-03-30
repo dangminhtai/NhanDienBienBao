@@ -187,10 +187,12 @@ class TrafficSignDetector:
             
             return (final_boxes, None, stats) if return_mask else (final_boxes, stats)
 
-        # Chế độ Thường (Manual)
-        hsv = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
+        # Chế độ Thường (Manual) - Đã đồng bộ luồng xử lý y hệt Auto-Tune
+        image_normalized = self._apply_clahe(image_bgr)
+        hsv = cv2.cvtColor(image_normalized, cv2.COLOR_BGR2HSV)
         mask = self._get_hsv_mask(hsv, min_s, min_v)
-        mask = self._preprocess_mask(mask)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((9,9), np.uint8))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3,3), np.uint8))
 
         # Trích xuất và tracking cho Manual mode
         raw_contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
