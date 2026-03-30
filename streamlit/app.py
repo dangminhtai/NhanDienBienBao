@@ -293,11 +293,9 @@ def main():
                         st.image(mask_combined, caption="4. Đập khuôn Mặt nạ Tổng hợp Trắng/Đen", use_container_width=True, clamp=True)
                         
                     st.info(f"""
-**👉 Mạch logic Toán học nối tiếp từ Bước 1 sang Bước 2:**
-- **Tiếp thu (1):** Bức ảnh hoàn thiện ánh sáng từ Bước 1 sẽ được bốc thẳng vào Bước 2 làm đầu vào.
-- **Dịch chuyển Không gian Màu (2):** Mắt máy tính tiếp tục đánh lừa thị giác bằng cách phá vỡ hệ màu RGB thành hệ **HSV**. Bức ảnh số 2 hiển thị rõ rệt bản đồ vũng lầy của kênh `S` (Saturation). Khu vực nào là điểm đen tức là màu ở đó nhạt phếch (cỏ cây, đường nhựa). Khu vực nào phát sáng trắng tức là màu sắc rực rỡ đậm đà (Biển báo, ô tô). Ngưỡng quét được đặt tự động theo tay anh kéo (**S > {min_s}, V > {min_v}**).
-- **Rọi tia quét 3 Lớp (3):** Những khu xám đen dưới ngưỡng rụng sạch! Tại những khu vực trắng chói lóa vượt qua bài kiểm tra S và V, hệ thống quăng ra 3 bản quét laser tìm kiếm mảng màu `Đỏ`, `Xanh Dương` và `Vàng`.
-- **Đóng Rập (4):** Đập chồng cả 3 bản quét ấy lại với nhau tạo ra "Tấm Giấy Than Điện Tử" cuối cùng. Cả tấm ảnh lớn giờ đã bị loại bỏ 99% bề mặt (màu đen). 1% các đốm trắng còn lại chính thức trở thành "Ứng cử viên Biển báo" để giao cho trí tuệ nhân tạo (SVM) nếm thử ở Bước 3.
+**👉 Tại sao Bước 2 này lại quan trọng?**
+- **Siêu lọc dữ liệu:** Thay vì bắt AI phải quét toàn bộ hàng triệu pixel (rất chậm), bước này loại bỏ ngay lập tức 99% vùng ảnh không liên quan như bầu trời, mặt đường, cây cối.
+- **Khu trú vùng tìm kiếm:** Tạo ra một "tấm bản đồ rập" Trắng/Đen để AI biết chính xác **CẦN TÌM Ở ĐÂU**. Điều này giúp hệ thống tăng tốc độ xử lý lên gấp nhiều lần và giảm thiểu tối đa báo động giả từ các vật thể không có màu sắc đặc trưng của biển báo.
                     """)
                     st.divider()
                     
