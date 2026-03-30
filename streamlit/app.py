@@ -293,9 +293,41 @@ def main():
                         st.image(mask_combined, caption="4. Đập khuôn Mặt nạ Tổng hợp Trắng/Đen", use_container_width=True, clamp=True)
                         
                     st.info(f"""
-**👉 Tại sao Bước 2 này lại quan trọng?**
-- **Siêu lọc dữ liệu:** Thay vì bắt AI phải quét toàn bộ hàng triệu pixel (rất chậm), bước này loại bỏ ngay lập tức 99% vùng ảnh không liên quan như bầu trời, mặt đường, cây cối.
-- **Khu trú vùng tìm kiếm:** Tạo ra một "tấm bản đồ rập" Trắng/Đen để AI biết chính xác **CẦN TÌM Ở ĐÂU**. Điều này giúp hệ thống tăng tốc độ xử lý lên gấp nhiều lần và giảm thiểu tối đa báo động giả từ các vật thể không có màu sắc đặc trưng của biển báo.
+Loại bỏ vùng ảnh không liên quan như bầu trời, mặc đường cây cối, cần điều chỉnh S và V của từng ảnh sao cho phù hợp                     """)
+                    st.divider()
+
+                    # --- TRỰC QUAN HÓA BƯỚC 3 (MORPHOLOGY & CONTOURS) ---
+                    st.write("### 📸 Bước 3: Nối hạt (Morphology) và Vẽ Phác thảo Ứng viên")
+                    
+                    # Mô phỏng toán học Bước 3
+                    kernel_close = np.ones((9,9), np.uint8)
+                    mask_closed = cv2.morphologyEx(mask_combined, cv2.MORPH_CLOSE, kernel_close)
+                    
+                    kernel_open = np.ones((3,3), np.uint8)
+                    mask_final = cv2.morphologyEx(mask_closed, cv2.MORPH_OPEN, kernel_open)
+                    
+                    # Vẽ khoanh vùng phác thảo (Drawing Bounding Boxes)
+                    contours, _ = cv2.findContours(mask_final, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    preview_contours = img_clahe_bgr.copy()
+                    for cnt in contours:
+                        x, y, w_box, h_box = cv2.boundingRect(cnt)
+                        # Vẽ mờ các ứng viên tiềm năng (trước khi lọc hình học)
+                        cv2.rectangle(preview_contours, (x, y), (x + w_box, y + h_box), (0, 255, 255), 2)
+                    
+                    preview_contours_pil = Image.fromarray(cv2.cvtColor(preview_contours, cv2.COLOR_BGR2RGB))
+
+                    c3_1, c3_2, c3_3, c3_4 = st.columns(4)
+                    with c3_1:
+                        st.image(mask_combined, caption="1. Mặt nạ gốc (Từ Bước 2)", use_container_width=True, clamp=True)
+                    with c3_2:
+                        st.image(mask_closed, caption="2. Vá lỗ hổng (Morphology Close)", use_container_width=True, clamp=True)
+                    with c3_3:
+                        st.image(mask_final, caption="3. Tẩy hạt bụi (Morphology Open)", use_container_width=True, clamp=True)
+                    with c3_4:
+                        st.image(preview_contours_pil, caption="4. Vẽ ranh giới ứng viên", use_container_width=True)
+                        
+                    st.info("""
+**Bước 3:** Gắn kết các mảng màu rời rạc (do bị chữ hoặc ký hiệu trên biển báo chia cắt) thành một khối thống nhất, tẩy sạch các đốm nhiễu li ti, sau đó khoanh vùng tất cả các vị trí nghi ngờ để chuẩn bị đi "hỏi ý kiến" trí tuệ nhân tạo ở các bước sau.
                     """)
                     st.divider()
                     
