@@ -212,6 +212,19 @@ def main():
                         model_path=os.path.join(current_dir, "models", "detect_model.pkl"),
                         scaler_path=os.path.join(current_dir, "models", "detect_scaler.pkl")
                     )
+                    # --- TRỰC QUAN HÓA BƯỚC 1 (CLAHE) ---
+                    st.write("### 📸 Bước 1: Tiền xử lý ánh sáng (CLAHE)")
+                    img_bg_full = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                    img_clahe_full = detector._apply_clahe(img_bg_full)
+                    img_clahe_pil = Image.fromarray(cv2.cvtColor(img_clahe_full, cv2.COLOR_BGR2RGB))
+                    
+                    col_orig, col_clahe = st.columns(2)
+                    with col_orig:
+                        st.image(image, caption="1. Ảnh gốc ban đầu", use_container_width=True)
+                    with col_clahe:
+                        st.image(img_clahe_pil, caption="2. Ảnh sau khi chạy CLAHE (Khử bóng râm, hiện chi tiết)", use_container_width=True)
+                        
+                    st.divider()
                     
                     if st.button("🚀 BẮT ĐẦU QUÉT TOÀN CẢNH"):
                         start_time = time.time()
