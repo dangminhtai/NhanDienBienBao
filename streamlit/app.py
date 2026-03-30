@@ -213,16 +213,31 @@ def main():
                         scaler_path=os.path.join(current_dir, "models", "detect_scaler.pkl")
                     )
                     # --- TRỰC QUAN HÓA BƯỚC 1 (CLAHE) ---
-                    st.write("### 📸 Bước 1: Tiền xử lý ánh sáng (CLAHE)")
-                    img_bg_full = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-                    img_clahe_full = detector._apply_clahe(img_bg_full)
-                    img_clahe_pil = Image.fromarray(cv2.cvtColor(img_clahe_full, cv2.COLOR_BGR2RGB))
+                    st.write("### 📸 Bước 1: Mổ xẻ chi tiết Toán học từng lớp ảnh (CLAHE)")
+                    img_bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
                     
-                    col_orig, col_clahe = st.columns(2)
-                    with col_orig:
-                        st.image(image, caption="1. Ảnh gốc ban đầu", use_container_width=True)
-                    with col_clahe:
-                        st.image(img_clahe_pil, caption="2. Ảnh sau khi chạy CLAHE (Khử bóng râm, hiện chi tiết)", use_container_width=True)
+                    # Phẫu thuật 1: Chuyển hệ BGR sang LAB và rút lấy kênh Độ Sáng (Lightness)
+                    lab = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2LAB)
+                    l, a, b = cv2.split(lab)
+                    
+                    # Phẫu thuật 2: CHỈ can thiệp vào kênh L cường độ sáng bằng CLAHE lưới 8x8
+                    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+                    cl = clahe.apply(l)
+                    
+                    # Phẫu thuật 3: Bơm kênh sáng mới (cl) vào lại mảng màu (a, b) cũ
+                    limg = cv2.merge((cl, a, b))
+                    img_clahe_bgr = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+                    img_clahe_pil = Image.fromarray(cv2.cvtColor(img_clahe_bgr, cv2.COLOR_BGR2RGB))
+                    
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.image(image, caption="1. Ảnh gốc (RGB)", use_container_width=True)
+                    with col2:
+                        st.image(l, caption="2. Rút kênh Sáng (L)", use_container_width=True, clamp=True)
+                    with col3:
+                        st.image(cl, caption="3. Cân bằng Histogram (CLAHE)", use_container_width=True, clamp=True)
+                    with col4:
+                        st.image(img_clahe_pil, caption="4. Trả lại mảng Màu (A,B)", use_container_width=True)
                         
                     st.divider()
                     
