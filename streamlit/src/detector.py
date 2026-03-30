@@ -59,10 +59,10 @@ class TrafficSignDetector:
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
         return mask
 
-    def nms(self, boxes, probs, threshold=0.3):
+    def nms(self, boxes, probs, threshold=0.3, return_indices=False):
         """Non-Maximum Suppression để loại bỏ các box chồng lấp."""
         if len(boxes) == 0:
-            return []
+            return ([], []) if return_indices else []
 
         boxes = np.array(boxes)
         x1 = boxes[:, 0]
@@ -91,6 +91,8 @@ class TrafficSignDetector:
             inds = np.where(ovr <= threshold)[0]
             order = order[inds + 1]
 
+        if return_indices:
+            return [boxes[i] for i in keep], keep
         return [boxes[i] for i in keep]
 
     def _apply_clahe(self, image_bgr):
@@ -102,17 +104,24 @@ class TrafficSignDetector:
         limg = cv2.merge((cl, a, b))
         return cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
 
-    def detect(self, image_bgr, min_s=100, min_v=100, min_size=20, return_mask=False, auto_tune=False):
+    def detect(self, image_bgr, min_s=100, min_v=100, min_size=20, nms_threshold=0.3, return_mask=False, auto_tune=False):
         """
         Sơ đồ thực hiện: [Hyper Turbo-Scan] -> Grid Mask -> SVM -> NMS
+        Returns: (final_boxes, mask, stats) if return_mask else (final_boxes, stats)
         """
+        stats = {
+            'hsv_cnt': 0,
+            'geo_pass': 0,
+            'filt_pass': 0,
+            'svm_pass': 0,
+            'nms_kept': 0
+        }
+        
         if auto_tune:
-            # 1. Tối ưu ánh sáng (CLAHE) - Làm 1 lần duy nhất trên ảnh gốc
             image_normalized = self._apply_clahe(image_bgr)
             h, w = image_bgr.shape[:2]
             hsv_full = cv2.cvtColor(image_normalized, cv2.COLOR_BGR2HSV)
             
-            # 2. Quét lưới mịn trên độ phân giải gốc (v5.2 - Không Downscaling)
             s_levels = [40, 80, 120, 160] 
             v_levels = [40, 80, 120, 160] 
             
@@ -121,25 +130,25 @@ class TrafficSignDetector:
             for s in s_levels:
                 for v in v_levels:
                     mask = self._get_hsv_mask(hsv_full, s, v)
-                    # morphology mạnh hơn để nối các phần biển báo bị vỡ (như vạch trắng giữa biển đỏ)
                     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((9,9), np.uint8))
                     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3,3), np.uint8))
                     
                     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    stats['hsv_cnt'] += len(contours)
+                    
                     for cnt in contours:
                         x, y, w_box, h_box = cv2.boundingRect(cnt)
                         if w_box >= min_size and h_box >= min_size:
-                            # 1. [GEOMETRY] Solidity > 0.3
                             area_cnt = cv2.contourArea(cnt)
                             if area_cnt < (w_box * h_box * 0.30): continue 
                             
                             aspect_ratio = w_box / float(h_box)
                             if 0.6 < aspect_ratio < 1.4:
+                                stats['geo_pass'] += 1
                                 y_end, x_end = min(y+h_box, h), min(x+w_box, w)
                                 roi = image_normalized[y:y_end, x:x_end]
                                 if roi.size == 0: continue
                                 
-                                # 2. [VIBRANCE + DENSITY] Lọc đốm nhiễu 
                                 roi_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
                                 avg_s = np.mean(roi_hsv[:,:,1])
                                 if avg_s < 30: continue 
@@ -148,12 +157,11 @@ class TrafficSignDetector:
                                 high_s_ratio = np.sum(s_map > 50) / float(roi.size / 3)
                                 if high_s_ratio > 0.95: continue 
                                 
-                                # 3. [FOCUS] Kiểm tra độ nét trên ROI gốc
                                 roi_gray_full = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
                                 lap_var = cv2.Laplacian(roi_gray_full, cv2.CV_64F).var()
                                 if lap_var < 40: continue 
                                 
-                                # 4. [HOG + SVM]
+                                stats['filt_pass'] += 1
                                 roi_resized = cv2.resize(roi, (32, 32))
                                 roi_gray = cv2.cvtColor(roi_resized, cv2.COLOR_BGR2GRAY)
                                 features = hog(roi_gray, **self.hog_params)
@@ -162,34 +170,45 @@ class TrafficSignDetector:
                                 if self.model.predict(features_scaled)[0] == 1:
                                     score = self.model.decision_function(features_scaled)[0]
                                     if score > 0.0:
-                                        all_candidates.append(((x, y, w_box, h_box), score))
+                                        stats['svm_pass'] += 1
+                                        all_candidates.append(((x, y, w_box, h_box), score, s, v))
 
             if not all_candidates:
-                return ([], None) if return_mask else []
+                return ([], None, stats) if return_mask else ([], stats)
                 
             boxes = [c[0] for c in all_candidates]
             scores = [c[1] for c in all_candidates]
-            final_boxes = self.nms(boxes, scores)
+            s_list = [c[2] for c in all_candidates]
+            v_list = [c[3] for c in all_candidates]
             
-            return (final_boxes, None) if return_mask else final_boxes
+            final_boxes, keep_indices = self.nms(boxes, scores, threshold=nms_threshold, return_indices=True)
+            stats['nms_kept'] = len(final_boxes)
+            stats['sv_params'] = [(s_list[i], v_list[i]) for i in keep_indices]
+            
+            return (final_boxes, None, stats) if return_mask else (final_boxes, stats)
 
         # Chế độ Thường (Manual)
         hsv = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
         mask = self._get_hsv_mask(hsv, min_s, min_v)
         mask = self._preprocess_mask(mask)
 
-        candidates = self._get_raw_candidates_from_mask(image_bgr, mask, min_size)
+        # Trích xuất và tracking cho Manual mode
+        raw_contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        stats['hsv_cnt'] = len(raw_contours)
         
-        if not candidates:
-            return ([], mask) if return_mask else []
-
+        candidates = self._get_raw_candidates_from_mask(image_bgr, mask, min_size)
+        # Vì _get_raw_candidates_from_mask gọi các bước nội bộ, ta chỉ lấy svm_pass là chính
+        stats['svm_pass'] = len(candidates)
+        
         boxes = [c[0] for c in candidates]
         scores = [c[1] for c in candidates]
-        final_boxes = self.nms(boxes, scores)
+        final_boxes, keep_indices = self.nms(boxes, scores, threshold=nms_threshold, return_indices=True)
+        stats['nms_kept'] = len(final_boxes)
+        stats['sv_params'] = [(min_s, min_v) for _ in keep_indices]
         
         if return_mask:
-            return final_boxes, mask
-        return final_boxes
+            return final_boxes, mask, stats
+        return final_boxes, stats
 
 
     def _get_raw_candidates(self, image_bgr, s, v, min_size):

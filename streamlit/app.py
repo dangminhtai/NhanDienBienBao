@@ -60,6 +60,7 @@ def main():
         det_params['min_s'] = st.sidebar.slider("Độ bão hòa tối thiểu (Saturation)", 0, 255, 80)
         det_params['min_v'] = st.sidebar.slider("Độ sáng tối thiểu (Value)", 0, 255, 80)
         det_params['min_size'] = st.sidebar.slider("Kích thước tối thiểu (Px)", 10, 200, 30)
+        det_params['nms_thresh'] = st.sidebar.slider("NMS IoU Threshold", 0.0, 1.0, 0.3, help="Ngưỡng loại bỏ các khung hình chồng lấp. Thường 0.3-0.5.")
         auto_tune = st.sidebar.checkbox("Chế độ Hyper-Scan (Siêu quét 16 vòng)", value=False, help="Hệ thống quét mịn 16 tổ hợp màu sắc. Tạm tắt để anh tự cấu hình tay.")
         show_debug = st.sidebar.checkbox("Hiện mặt nạ quét màu (Debug Mask)", value=False)
     
@@ -118,10 +119,11 @@ def main():
                     image_bgr = cv2.imread(img_path)
                     if image_bgr is None: continue
                     
-                    boxes = detector.detect(image_bgr, 
+                    boxes, stats = detector.detect(image_bgr, 
                                          min_s=det_params.get('min_s', 80), 
                                          min_v=det_params.get('min_v', 80), 
                                          min_size=det_params.get('min_size', 30),
+                                         nms_threshold=det_params.get('nms_thresh', 0.3),
                                          auto_tune=auto_tune)
                     
                     if boxes:
@@ -160,7 +162,7 @@ def main():
                                 label_text = f"{det['label']} ({det['conf']:.1f}%)"
                                 img_pil_res = draw_vietnamese_text(img_pil_res, label_text, (x, y-35), font_size=30)
                                 
-                                # Hiện meta mẫu vào expander
+                                # Hiện meta mẫu vào expander thay cho ảnh crop mờ
                                 meta_path = os.path.join(current_dir, "dataset", "Meta", f"{det['id']}.png")
                                 if os.path.exists(meta_path):
                                     st.image(meta_path, width=80, caption=f"Biển chuẩn #{det['id']}")
@@ -216,17 +218,28 @@ def main():
                         with st.spinner('Đang thực hiện quét đa sắc...'):
                             img_bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
                             display_pil = image.copy()
-                            boxes, mask = detector.detect(
+                            boxes, mask, stats = detector.detect(
                                 img_bgr, 
                                 min_s=det_params['min_s'], 
-                                min_v=det_params['min_v'],
+                                min_v=det_params['min_v'], 
                                 min_size=det_params['min_size'],
+                                nms_threshold=det_params['nms_thresh'],
                                 return_mask=True,
                                 auto_tune=auto_tune
                             )
                             
                             elapsed_time = time.time() - start_time
                             
+                            # Hiển thị Tracking Stats để giải đáp thắc mắc của anh
+                            st.write("### 📊 Thống kê bộ lọc (Tracking Stats):")
+                            st.code(f"""
+- Tổng vùng màu tìm thấy (HSV): {stats['hsv_cnt']}
+- Vượt qua vòng Hình học (Geo): {stats['geo_pass']}
+- Vượt qua vòng Focus/Laplacian: {stats['filt_pass']}
+- Được SVM xác nhận là Biển báo: {stats['svm_pass']}
+- Giữ lại cuối cùng sau NMS: {stats['nms_kept']}
+                            """)
+
                             if not auto_tune and show_debug:
                                 st.subheader("🔍 Mặt nạ quét màu (Mask)")
                                 st.image(mask, caption='Vùng màu trắng là nơi OpenCV đang tìm kiếm biển báo', use_container_width=True)
@@ -237,6 +250,8 @@ def main():
                                 st.success(f"Tìm thấy {len(boxes)} biển báo trong {elapsed_time:.2f} giây!")
                                 
                                 results = []
+                                sv_params = stats.get('sv_params', [])
+                                
                                 for i, box in enumerate(boxes):
                                     x, y, w, h = box
                                     roi = img_bgr[y:y+h, x:x+w]
@@ -246,16 +261,21 @@ def main():
                                     pred_id, conf = predict_hybrid(img_batch, cnn_extractor, rec_scaler, svm_model)
                                     label = class_names.get(pred_id, "Không xác định")
                                     
+                                    s_val, v_val = sv_params[i] if i < len(sv_params) else ("?", "?")
+                                    
                                     results.append({
                                         "box": (x, y, w, h),
                                         "label": label,
                                         "id": pred_id,
-                                        "conf": conf
+                                        "conf": conf,
+                                        "s": s_val,
+                                        "v": v_val
                                     })
                                     
                                     draw = ImageDraw.Draw(display_pil)
                                     draw.rectangle([x, y, x+w, y+h], outline=(0, 255, 0), width=3)
-                                    display_pil = draw_vietnamese_text(display_pil, label, (x, y-25))
+                                    display_label = f"{label} (S:{s_val}, V:{v_val})"
+                                    display_pil = draw_vietnamese_text(display_pil, display_label, (x, y-25))
 
                                 st.image(display_pil, caption='Kết quả phát hiện v4.2', use_container_width=True)
                                 
@@ -263,14 +283,13 @@ def main():
                                 cols = st.columns(min(len(results), 4))
                                 for idx, res in enumerate(results):
                                     with cols[idx % 4]:
-                                        x, y, w, h = res["box"]
-                                        st.image(image.crop((x, y, x+w, y+h)), use_container_width=True)
-                                        # Hiển thị meta mẫu nhỏ bên dưới
+                                        # Hiển thị meta mẫu chuẩn thay cho ảnh cắt mờ
                                         meta_path = os.path.join(current_dir, "dataset", "Meta", f"{res['id']}.png")
                                         if os.path.exists(meta_path):
-                                             st.image(meta_path, caption=f"Mẫu #{res['id']}", width=60)
+                                             st.image(meta_path, caption=f"Mẫu #{res['id']}", width=100)
                                         st.write(f"**{res['label']}**")
                                         st.write(f"Độ tin cậy: {res['conf']:.2f}")
+                                        st.markdown(f"**`S={res['s']} | V={res['v']}`**")
 
         # --- PHẦN MINH BẠCH TOÁN HỌC ---
         st.divider()

@@ -27,3 +27,4 @@
 | ISS015 | Hyper-Scan chưa đạt kỳ vọng của người dùng | Tạm thời disable mặc định, tập trung sức mạnh vào chế độ Thủ công (Manual). | Hoàn thành v5.1 |
 | ISS016 | Biển báo nhỏ bị mất khi Downscaling | Loại bỏ hoàn toàn logic resize, quét trên Full Resolution. | Hoàn thành v5.2 |
 | ISS017 | Nhu cầu quét ảnh hàng loạt từ thư mục | Triển khai BatchProcessor và tích hợp giao diện Batch Mode vào Streamlit. | Hoàn thành v6.0 |
+| ISS018 | Biển báo bị bỏ sót (Detections missing) | Bổ sung Tracking Stats để kiểm tra từng bước lọc (HSV -> SVM). | Đang theo dõi |
