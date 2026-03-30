@@ -245,7 +245,7 @@ def main():
                     st.divider()
                     
                     # --- TRỰC QUAN HÓA BƯỚC 2 (HSV FILTERING) ---
-                    st.write("### 📸 Bước 2: Quét Lưới Màu (HSV Space) và Cắt Rập (Masking)")
+                    st.write("### 📸 Bước 2: Chuyển đổi Không gian Màu (HSV) và Cắt Rập (Masking)")
                     
                     hsv = cv2.cvtColor(img_clahe_bgr, cv2.COLOR_BGR2HSV)
                     min_s, min_v = det_params['min_s'], det_params['min_v']
@@ -270,26 +270,34 @@ def main():
                     upper_yellow = np.array([33, 255, 255])
                     mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
                     
-                    # Tổng hợp
+                    # Tổng hợp Mask Đen trắng
                     mask_combined = cv2.bitwise_or(mask_red, mask_blue)
                     mask_combined = cv2.bitwise_or(mask_combined, mask_yellow)
                     
+                    # Trực quan hóa Khối Quét 3 tia (Đỏ/Xanh/Vàng phát sáng trên nền đen RGB)
+                    mask_colored_rgb = np.zeros_like(img_bgr)
+                    mask_colored_rgb[mask_blue > 0] = [0, 150, 255]   # Xanh dương sáng
+                    mask_colored_rgb[mask_yellow > 0] = [255, 255, 0] # Vàng
+                    mask_colored_rgb[mask_red > 0] = [255, 0, 0]      # Đỏ chót (Vẽ chồng lên cùng để Đỏ ưu tiên hiển thị nếu đè)
+                    
+                    s_channel = hsv[:,:,1] # Tự tách kênh Độ Bão Hòa S
+                    
                     c2_1, c2_2, c2_3, c2_4 = st.columns(4)
                     with c2_1:
-                        st.image(mask_red, caption="1. Mặt nạ Đỏ", use_container_width=True, clamp=True)
+                        st.image(img_clahe_pil, caption="1. Liền mạch kết quả (Từ Bước 1)", use_container_width=True)
                     with c2_2:
-                        st.image(mask_blue, caption="2. Mặt nạ Xanh", use_container_width=True, clamp=True)
+                        st.image(s_channel, caption="2. Chiết xuất Độ Bão Hòa (Kênh S - HSV)", use_container_width=True, clamp=True)
                     with c2_3:
-                        st.image(mask_yellow, caption="3. Mặt nạ Vàng", use_container_width=True, clamp=True)
+                        st.image(mask_colored_rgb, caption="3. Di quét rải 3 dải màu định vị", use_container_width=True)
                     with c2_4:
-                        st.image(mask_combined, caption="4. Tổng hợp (Combined)", use_container_width=True, clamp=True)
+                        st.image(mask_combined, caption="4. Đập khuôn Mặt nạ Tổng hợp Trắng/Đen", use_container_width=True, clamp=True)
                         
                     st.info(f"""
-**👉 Cách lưới lọc HSV hoạt động:**
-- Hàm `cv2.cvtColor` chuyển không gian ảnh từ RGB/BGR sang **HSV** (Hue, Saturation, Value) vì HSV cực kỳ miễn nhiễm với sự thay đổi của bóng râm.
-- Hệ thống thiết kế **3 mặt nạ đục lỗ (Mask)** tương ứng với 3 rải màu chuẩn của Biển báo trên thế giới: `Đỏ`, `Xanh dương` và `Vàng`. Tại đây, ngưỡng cắt của mặt nạ được nội suy dựa trên thanh trượt của anh (**S tối thiểu = {min_s}, V tối thiểu = {min_v}**).
-- Điểm ảnh nào có độ Bão hòa hoặc Độ sáng rơi rụng dưới ngưỡng này sẽ lập tức bị nhuộm đen (loại bỏ). Các điểm đạt chuẩn giữ lại màu Trắng (Ứng viên tiềm năng).
-- Phép toán hợp kim `cv2.bitwise_or` sẽ đem chồng 3 tấm mặt nạ này lại với nhau tạo ra bức ảnh số 4 (*Tổng hợp*). Lúc này, mọi thứ trên thế giới đều bị xóa đi, hệ thống **CHỈ đi tìm kiếm biển báo ở những đốm sáng màu trắng** ở Bước 3.
+**👉 Mạch logic Toán học nối tiếp từ Bước 1 sang Bước 2:**
+- **Tiếp thu (1):** Bức ảnh hoàn thiện ánh sáng từ Bước 1 sẽ được bốc thẳng vào Bước 2 làm đầu vào.
+- **Dịch chuyển Không gian Màu (2):** Mắt máy tính tiếp tục đánh lừa thị giác bằng cách phá vỡ hệ màu RGB thành hệ **HSV**. Bức ảnh số 2 hiển thị rõ rệt bản đồ vũng lầy của kênh `S` (Saturation). Khu vực nào là điểm đen tức là màu ở đó nhạt phếch (cỏ cây, đường nhựa). Khu vực nào phát sáng trắng tức là màu sắc rực rỡ đậm đà (Biển báo, ô tô). Ngưỡng quét được đặt tự động theo tay anh kéo (**S > {min_s}, V > {min_v}**).
+- **Rọi tia quét 3 Lớp (3):** Những khu xám đen dưới ngưỡng rụng sạch! Tại những khu vực trắng chói lóa vượt qua bài kiểm tra S và V, hệ thống quăng ra 3 bản quét laser tìm kiếm mảng màu `Đỏ`, `Xanh Dương` và `Vàng`.
+- **Đóng Rập (4):** Đập chồng cả 3 bản quét ấy lại với nhau tạo ra "Tấm Giấy Than Điện Tử" cuối cùng. Cả tấm ảnh lớn giờ đã bị loại bỏ 99% bề mặt (màu đen). 1% các đốm trắng còn lại chính thức trở thành "Ứng cử viên Biển báo" để giao cho trí tuệ nhân tạo (SVM) nếm thử ở Bước 3.
                     """)
                     st.divider()
                     
