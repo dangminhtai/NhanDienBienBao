@@ -239,6 +239,9 @@ def main():
                     with col4:
                         st.image(img_clahe_pil, caption="4. Trả lại mảng Màu (A,B)", use_container_width=True)
                         
+                    st.info("""
+                    Bước này để xử lý các biển báo bị ngược sáng trong bóng râm, dùng CLAHE để đảm bao các biển báo tối màu sẽ giữ được đặc trung của nó
+                    """)
                     st.divider()
                     
                     if st.button("🚀 BẮT ĐẦU QUÉT TOÀN CẢNH"):
