@@ -1,8 +1,10 @@
 # Bài học kinh nghiệm trong dự án (Learned Lessons)
 
-## Kỹ thuật Feature### Học được từ v4.0 (Hybrid SVM+CNN)
+## Học được từ v4.0 (Hybrid SVM+CNN)
 - **Kiến trúc Lai ghép**: Cách kết hợp CNN làm bộ trích xuất đặc trưng (Feature Extractor) và SVM làm bộ phân loại (Classifier) mang lại độ chính xác cao hơn và khả năng bao quát tốt hơn HOG.
 - **Tiền xử lý CNN**: Quy trình chuẩn hóa ảnh đơn giản (Resize 32x32, normalize 0-1) nhưng cực kỳ quan trọng để khớp với dữ liệu huấn luyện.
+- **Tầm quan trọng của NMS**: IoU threshold đóng vai trò cực kỳ quan trọng trong việc giữ lại các ô chuẩn xác nhất.
+- **Trực quan hóa "Nội tạng" thuật toán**: Khi trình bày cho người dùng không rành code, không được nhảy vọt từ Mặt nạ trắng đen sang Ảnh màu khoanh khung ngay lập tức. Phải có bước đệm: Vẽ khung trực tiếp lên mặt nạ đen trắng để chứng minh bản chất của thuật toán `findContours` là làm việc trên các "hòn đảo" pixel, sau đó mới dùng tọa độ đó để mapping ngược lại ảnh gốc. Điều này giúp xóa tan "Hộp đen" hoàn toàn! 🕵️‍♂️🔥
 - **Tích hợp Keras trong Streamlit**: Cần sử dụng `@st.cache_resource` để tránh việc tải lại mô hình CNN nặng nề mỗi khi người dùng tương tác.
 - **Bảo toàn độ phân giải (v5.2):** Loại bỏ logic downscaling (800px) giúp hệ thống "nhìn thấy" các biển báo nhỏ (20-30px) ở xa cực kỳ hiệu quả. Tuy nhiên đánh đổi bằng thời gian xử lý ảnh 4K tăng lên (~1-2s).
 - **Unicode OpenCV (v6.0):** `cv2.putText` không hỗ trợ Unicode. Luôn luôn dùng PIL để vẽ chữ tiếng Việt trước khi hiển thị trên Streamlit.
@@ -10,7 +12,6 @@
 - **Morphology Closing (9x9):** Giúp nối liền các mảng màu bị chia cắt bởi text hoặc họa tiết trắng bên trong biển báo.
 - **Bài học về sự cân bằng (v4.8):** Cài đặt bộ lọc quá chặt (Laplacian 100, SVM 0.5) sẽ dẫn đến Under-detection. Ngưỡng Laplacian 40-50 và Saturation 30 là "điểm ngọt" để vừa giữ biển vừa diệt nhiễu.
 - **Minh bạch toán học**: Việc giải thích cơ chế "Deep Features" giúp người dùng tin tưởng hơn vào kết quả của mô hình "Hộp đen".
-ình dạng giống nhau nhưng màu khác nhau (ví dụ: biển báo cấm đỏ vs biển báo chỉ dẫn xanh).
 
 ## Tiền xử lý (Preprocessing)
 - **CLAHE**: Cân bằng ánh sáng cục bộ cực kỳ quan trọng đối với tập dữ liệu GTSRB vì có nhiều ảnh bị tối hoặc lóa sáng.
@@ -21,7 +22,6 @@
 ## Triển khai (Deployment)
 - Luôn kiểm tra tính tương thích giữa `StandardScaler` và `Model` (số lượng đặc trưng `n_features_in_`).
 - Khi tích hợp mô hình từ bên ngoài, cần bám sát Notebook gốc để tái hiện đúng pipeline trích xuất đặc trưng.
-
 - **Giải mã Hộp đen (Model Transparency)**: Việc kết hợp `st.latex` và `st.pyplot` giúp giao diện AI trở nên chuyên nghiệp và minh bạch hơn, giải quyết triệt để yêu cầu về "Toán học cho AI".
 - **Tối ưu hóa (Optimization)**: Sử dụng `@st.cache_resource` giúp giảm thời gian nạp mô hình SVM (1812 đặc trưng) xuống mức tức thì sau lần nạp đầu tiên.
 - **SVM Confidence**: Dù SVC không bật `probability=True`, ta vẫn có thể ước lượng độ tin cậy thông qua `decision_function` và hàm Sigmoid để cải thiện trải nghiệm người dùng.
