@@ -244,6 +244,55 @@ def main():
                     """)
                     st.divider()
                     
+                    # --- TRỰC QUAN HÓA BƯỚC 2 (HSV FILTERING) ---
+                    st.write("### 📸 Bước 2: Quét Lưới Màu (HSV Space) và Cắt Rập (Masking)")
+                    
+                    hsv = cv2.cvtColor(img_clahe_bgr, cv2.COLOR_BGR2HSV)
+                    min_s, min_v = det_params['min_s'], det_params['min_v']
+                    
+                    # Tính toán mô phỏng 3 mask
+                    # Đỏ
+                    lower_red1 = np.array([0, min_s, min_v])
+                    upper_red1 = np.array([15, 255, 255])
+                    mask_red1 = cv2.inRange(hsv, lower_red1, upper_red1)
+                    lower_red2 = np.array([155, min_s, min_v])
+                    upper_red2 = np.array([179, 255, 255])
+                    mask_red2 = cv2.inRange(hsv, lower_red2, upper_red2)
+                    mask_red = cv2.bitwise_or(mask_red1, mask_red2)
+                    
+                    # Xanh dương
+                    lower_blue = np.array([100, min_s, min_v])
+                    upper_blue = np.array([130, 255, 255])
+                    mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
+                    
+                    # Vàng
+                    lower_yellow = np.array([17, min_s, min_v])
+                    upper_yellow = np.array([33, 255, 255])
+                    mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
+                    
+                    # Tổng hợp
+                    mask_combined = cv2.bitwise_or(mask_red, mask_blue)
+                    mask_combined = cv2.bitwise_or(mask_combined, mask_yellow)
+                    
+                    c2_1, c2_2, c2_3, c2_4 = st.columns(4)
+                    with c2_1:
+                        st.image(mask_red, caption="1. Mặt nạ Đỏ", use_container_width=True, clamp=True)
+                    with c2_2:
+                        st.image(mask_blue, caption="2. Mặt nạ Xanh", use_container_width=True, clamp=True)
+                    with c2_3:
+                        st.image(mask_yellow, caption="3. Mặt nạ Vàng", use_container_width=True, clamp=True)
+                    with c2_4:
+                        st.image(mask_combined, caption="4. Tổng hợp (Combined)", use_container_width=True, clamp=True)
+                        
+                    st.info(f"""
+**👉 Cách lưới lọc HSV hoạt động:**
+- Hàm `cv2.cvtColor` chuyển không gian ảnh từ RGB/BGR sang **HSV** (Hue, Saturation, Value) vì HSV cực kỳ miễn nhiễm với sự thay đổi của bóng râm.
+- Hệ thống thiết kế **3 mặt nạ đục lỗ (Mask)** tương ứng với 3 rải màu chuẩn của Biển báo trên thế giới: `Đỏ`, `Xanh dương` và `Vàng`. Tại đây, ngưỡng cắt của mặt nạ được nội suy dựa trên thanh trượt của anh (**S tối thiểu = {min_s}, V tối thiểu = {min_v}**).
+- Điểm ảnh nào có độ Bão hòa hoặc Độ sáng rơi rụng dưới ngưỡng này sẽ lập tức bị nhuộm đen (loại bỏ). Các điểm đạt chuẩn giữ lại màu Trắng (Ứng viên tiềm năng).
+- Phép toán hợp kim `cv2.bitwise_or` sẽ đem chồng 3 tấm mặt nạ này lại với nhau tạo ra bức ảnh số 4 (*Tổng hợp*). Lúc này, mọi thứ trên thế giới đều bị xóa đi, hệ thống **CHỈ đi tìm kiếm biển báo ở những đốm sáng màu trắng** ở Bước 3.
+                    """)
+                    st.divider()
+                    
                     if st.button("🚀 BẮT ĐẦU QUÉT TOÀN CẢNH"):
                         start_time = time.time()
                         with st.spinner('Đang thực hiện quét đa sắc...'):
