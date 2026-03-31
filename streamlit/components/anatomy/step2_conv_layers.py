@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-def render_conv1_layer(cnn_extractor, img_batch, raw_ndarray):
+def render_conv1_layer(cnn_extractor, img_batch, raw_ndarray, fmaps1):
     """Mổ xẻ Tầng Conv2D #1 (32x32 -> 30x30)."""
     st.markdown("### 🔬 2.1.2: Giải phẫu Tầng Conv2D #1 (32x32 ➡️ 30x30)")
     
