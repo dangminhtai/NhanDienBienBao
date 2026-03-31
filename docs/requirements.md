@@ -15,5 +15,8 @@
 ## Quy trình triển khai Step-by-step
 1. **Thiết lập môi trường**: Cài đặt dependencies từ `requirements.txt`.
 2. **Module trung tâm**: `src/data_utils.py` xử lý logic trích xuất đặc trưng 1812 chiều.
+    - [x] 2.1.1: Phép chia Chuẩn hóa (Normalization)
+    - [x] 2.1.2: Mổ xẻ Conv2D_1 (3x3x3)
+    - [/] 2.1.3: Bài giảng Siêu tích chập (Conv2D_2 - 3x3x32) - *Đang thực hiện*
 3. **Scaler đồng bộ**: Chạy `src/rebuild_scaler.py` để tạo bộ chuẩn hóa tương thích mô hình.
 4. **App Deployment**: Khởi chạy `streamlit run streamlit/app.py`.
