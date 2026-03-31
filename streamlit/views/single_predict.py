@@ -73,47 +73,80 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                 st.caption("Dữ liệu lúc này đã là số thực [0, 1]. Đây là 'thức ăn' chuẩn cho các Nơ-ron.")
 
                 # ---------------------------------------------------------
-                # 2.2: DEEP TRACKING - X-QUANG TẦNG CONVOLUTION
+                # 2.2: DEEP TRACKING - X-QUANG TẦNG CONVOLUTION & GIẢI PHẪU PHÉP NHÂN
                 # ---------------------------------------------------------
-                st.markdown("### 🔬 2.2: X-Quang Tầng soi (Feature Maps)")
-                st.caption("Dưới đây là 8 'mắt nhìn' đầu tiên của CNN. Anh sẽ thấy nó bóc tách biên giới và màu sắc biển báo:")
+                st.markdown("### 🔬 2.2: Giải phẫu Phép nhân Tích chập (Dot Product)")
+                st.caption("Đây là 'Hộp đen' toán học bấy lâu nay. Hãy xem CNN tính toán 1 điểm trên Bản đồ nhiệt như thế nào:")
                 
                 import matplotlib.pyplot as plt
                 import tensorflow as tf
+                import numpy as np
 
-                # Tạo mô hình phụ để trích xuất Feature Maps (Tầng Conv đầu tiên)
-                try:
-                    # Lấy layer Conv2D đầu tiên (thường là index 0 hoặc 1)
-                    conv_layer = cnn_extractor.layers[0] 
-                    debug_model = tf.keras.Model(inputs=cnn_extractor.input, outputs=conv_layer.output)
-                    feature_maps = debug_model.predict(img_batch, verbose=0) # Shape (1, 30, 30, 32)
-                    
-                    # Vẽ 8 feature maps đầu tiên
-                    fig, axes = plt.subplots(2, 4, figsize=(10, 5))
-                    for i, ax in enumerate(axes.flat):
-                        if i < 8:
-                            ax.imshow(feature_maps[0, :, :, i], cmap='viridis')
-                        ax.axis('off')
-                    st.pyplot(fig)
-                    st.caption("8 Bản đồ nhiệt (Heatmaps) đầu tiên: Chỗ tím/xanh là tối, chỗ vàng rực là nơi CNN 'dính' đặc điểm mạnh.")
-                except Exception as e:
-                    st.warning(f"Không thể hiển thị Heatmap: {str(e)}")
+                # Tìm tầng Conv2D đầu tiên
+                conv_layer = next((l for l in cnn_extractor.layers if "conv2d" in l.name.lower()), None)
+                
+                if conv_layer:
+                    try:
+                        # 1. Trích xuất Kernel (Trọng số) thực tế của Filter #0
+                        weights, biases = conv_layer.get_weights()
+                        kernel_0 = weights[:, :, 0, 0] # Lấy 3x3 của Kênh R, Filter 0
+                        bias_0 = biases[0]
+
+                        # 2. Lấy vùng ảnh 3x3 đầu tiên (Kênh R, chuẩn hóa)
+                        input_patch = raw_ndarray[0:3, 0:3, 0] / 255.0
+
+                        # 3. Trích xuất Feature Maps thực tế để đối chứng
+                        debug_model = tf.keras.Model(inputs=cnn_extractor.input, outputs=conv_layer.output)
+                        feature_maps = debug_model.predict(img_batch, verbose=0)
+                        actual_value = feature_maps[0, 0, 0, 0]
+
+                        # 4. Hiển thị mô phỏng phép tính
+                        col_m1, col_m2, col_m3 = st.columns([1, 1, 1])
+                        with col_m1:
+                            st.markdown("**1. Vùng ảnh 3x3 (Input)**")
+                            st.code(f"{input_patch}", language="python")
+                        with col_m2:
+                            st.markdown("**2. Bộ lọc (Kernel #0)**")
+                            st.code(f"{kernel_0}", language="python")
+                        with col_m3:
+                            st.markdown("**3. Kết quả (Dot Product)**")
+                            calc_sum = np.sum(input_patch * kernel_0)
+                            st.code(f"Sum: {calc_sum:.4f}\n+ Bias: {bias_0:.4f}\n= Output: {actual_value:.4f}", language="python")
+
+                        st.info(f"💡 **Sự thật:** Con số `{actual_value:.4f}` chính là giá trị tại điểm Tọa độ (0,0) trên Bản đồ nhiệt dưới đây!")
+
+                        # 5. Vẽ 8 feature maps đầu tiên
+                        fig, axes = plt.subplots(2, 4, figsize=(10, 5))
+                        for i, ax in enumerate(axes.flat):
+                            if i < 8:
+                                ax.imshow(feature_maps[0, :, :, i], cmap='viridis')
+                            ax.axis('off')
+                        st.pyplot(fig)
+                        st.caption(f"8 Bản đồ nhiệt (Heatmaps) đầu tiên. Điểm sáng rực chính là nơi có kết quả phép nhân lớn nhất!")
+
+                    except Exception as e:
+                        st.warning(f"Lỗi khi mổ xẻ toán học: {str(e)}")
+                else:
+                    st.warning("⚠️ Không tìm thấy tầng Conv2D để giải phẫu.")
 
                 # ---------------------------------------------------------
                 # 2.2b: TRACKING MA TRẬN TRUNG GIAN (POOLING)
                 # ---------------------------------------------------------
                 st.markdown("### 🧹 2.2b: Tracking Ma trận sau Gạn lọc (Pooling)")
-                try:
-                    # Lấy layer Pooling cuối cùng (thường là layer trước Flatten)
-                    # Trong architecture của user, MaxPooling2D cuối là layer index 6
-                    pool_layer = cnn_extractor.layers[6] 
-                    pool_model = tf.keras.Model(inputs=cnn_extractor.input, outputs=pool_layer.output)
-                    pool_output = pool_model.predict(img_batch, verbose=0) # Shape (1, 5, 5, 64)
-                    
-                    st.code(f"# Shape sau Pooling: {pool_output.shape}\n# Ma trận 5x5 của Lớp đặc trưng số 0:\n{pool_output[0, :, :, 0]}", language="python")
-                    st.caption("Anh thấy không? Lúc này không còn là pixel màu nữa, mà là 'Cường độ đặc trưng'.")
-                except:
-                    st.caption("Dữ liệu nén quá sâu (5x5). Đã sẵn sàng để Trải phẳng.")
+                
+                # Tìm tầng Pooling cuối cùng
+                pool_layers = [l for l in cnn_extractor.layers if "pool" in l.name.lower()]
+                pool_layer = pool_layers[-1] if pool_layers else None
+                
+                if pool_layer:
+                    try:
+                        pool_model = tf.keras.Model(inputs=cnn_extractor.input, outputs=pool_layer.output)
+                        pool_output = pool_model.predict(img_batch, verbose=0)
+                        
+                        st.code(f"# Shape sau Pooling ({pool_layer.name}): {pool_output.shape}\n# Ma trận 5x5 (5 dòng đầu) của Lớp đặc trưng số 0:\n{pool_output[0, :5, :5, 0]}", language="python")
+                        st.caption("Dữ liệu nén càng nhỏ, các đặc trưng quan trọng càng hiện rõ.")
+                    except Exception as e:
+                        st.caption(f"Dữ liệu nén quá sâu: {str(e)}")
 
                 # ---------------------------------------------------------
                 # 2.3: GIẢI PHẪU PHÉP NÉN (FLATTEN TO DENSE)
