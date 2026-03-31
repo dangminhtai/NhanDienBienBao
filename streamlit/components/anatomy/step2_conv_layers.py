@@ -113,26 +113,59 @@ def render_conv2_layer(cnn_extractor, img_batch, fmaps1):
     fmaps2 = model2.predict(img_batch, verbose=0)
     actual_val2 = fmaps2[0, 0, 0, 0]
 
-    st.markdown("#### 🧪 Phòng thí nghiệm: Cách 32 tầng hội quân thành 1")
-    ch_idx = st.select_slider("🔍 Chọn 1 trong 32 kênh để soi:", options=list(range(32)), value=0)
+def render_conv2_layer(cnn_extractor, img_batch, fmaps1):
+    """Mổ xẻ Tầng Conv2D #2 (30x30 -> 28x28)."""
+    st.markdown("---")
+    st.markdown("### 🧬 2.1.4: Tích chập Nâng cao (Conv2D #2 - 3x3x32)")
     
-    p_ch = fmaps1[0, 0:3, 0:3, ch_idx]
-    k_ch = weights2[:, :, ch_idx, 0]
+    # 1. Công thức kích thước
+    st.latex(r"H_{out} = H_{in} - K + 1 = 30 - 3 + 1 = 28")
+    st.latex(r"W_{out} = W_{in} - K + 1 = 30 - 3 + 1 = 28")
+    st.caption("💡 Lúc này 'đối tượng' đầu vào là 32 bản đồ đặc trưng từ tầng 1. Tầng 2 sẽ quét tiếp để tìm các đặc trưng bậc cao hơn.")
+
+    # 2. Trích xuất dữ liệu
+    layer_conv2 = [l for l in cnn_extractor.layers if "conv2d" in l.name.lower()][1]
+    weights2, biases2 = layer_conv2.get_weights()
+    
+    # 3. Thanh trượt chọn Output Filter (0-63)
+    f_out_idx = st.select_slider(
+        "🔍 Chọn 1 trong 64 bộ lọc (Output Filter) của Tầng 2:",
+        options=list(range(64)),
+        value=0,
+        key="conv2_filter_slider"
+    )
+
+    bias2_f = biases2[f_out_idx]
+    model2 = tf.keras.Model(inputs=cnn_extractor.input, outputs=layer_conv2.output)
+    fmaps2 = model2.predict(img_batch, verbose=0)
+    actual_val2 = fmaps2[0, 0, 0, f_out_idx]
+
+    st.markdown(f"#### 🧪 Phòng thí nghiệm: Cách 32 tầng đặc trưng hội quân thành Filter #{f_out_idx}")
+    st.info("💡 **Góc nhìn toán học:** Một filter ở tầng này không chỉ soi 1 ảnh, mà soi đồng thời **32 bản đồ** kết quả của tầng trước để tổng hợp thông tin.")
+    
+    # 4. Filter x Input Channel Dissection
+    ch_in_idx = st.select_slider(f"🔍 Soi Kernel slice của Input Channel (0-31) đối với Filter #{f_out_idx}:", options=list(range(32)), value=0)
+    
+    p_ch = fmaps1[0, 0:3, 0:3, ch_in_idx]
+    k_ch = weights2[:, :, ch_in_idx, f_out_idx]
     sum_ch = np.sum(p_ch * k_ch)
     
     cl1, cl2, cl3 = st.columns(3)
-    with cl1: st.write("Ảnh (Trang #%d)" % ch_idx); st.write(p_ch)
-    with cl2: st.write("Kernel (Lớp #%d)" % ch_idx); st.write(k_ch)
-    with cl3: st.write("Kết quả (IxK)"); st.write(p_ch * k_ch); st.success("Sum: %.6f" % sum_ch)
+    with cl1: st.write(f"Vùng 3x3 (FMap1 #{ch_in_idx})"); st.write(p_ch)
+    with cl2: st.write(f"Kernel Slice (#{ch_in_idx})"); st.write(k_ch)
+    with cl3: st.write("Kết quả nhân tử"); st.write(p_ch * k_ch); st.success(f"Sum: {sum_ch:.6f}")
         
     st.markdown("---")
-    total_from_32 = sum([np.sum(fmaps1[0, 0:3, 0:3, i] * weights2[:, :, i, 0]) for i in range(32)])
-    z_linear = total_from_32 + bias2_0
+    # 5. Phép tổng lực 32 kênh
+    total_from_32 = sum([np.sum(fmaps1[0, 0:3, 0:3, i] * weights2[:, :, i, f_out_idx]) for i in range(32)])
+    z_linear = total_from_32 + bias2_f
     
-    st.markdown("#### 🧮 Phép cộng 32 Kênh + Bias")
-    st.warning(f"Tổng Tuyến tính (Z): {z_linear:.6f}")
+    st.markdown(f"#### 🧮 Phép cộng 32 Kênh + Bias (Filter #{f_out_idx})")
+    st.code(f"Sum(32 Kênh) + {bias2_f:.6f} (Bias) = {z_linear:.6f}")
+    st.warning(f"➡️ **Tổng Tuyến tính (Z): {z_linear:.6f}**")
+    
     st.latex(r"ReLU(Z) = \max(0, Z)")
-    st.success(f"Kết quả sau ReLU: {max(0, z_linear):.6f}")
-    st.info(f"📍 Đối chứng: **{actual_val2:.6f}** (Khớp tuyệt đối!)")
+    st.success(f"➡️ **Kết quả sau ReLU: {max(0, z_linear):.6f}**")
+    st.info(f"📍 **Đối chứng:** Giá trị thực tế tại ô (0,0,f={f_out_idx}) là: **{actual_val2:.6f}** (Khớp tuyệt đối!)")
     
     return fmaps2
