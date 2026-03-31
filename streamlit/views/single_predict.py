@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import tensorflow as tf
 from src.data_processor import preprocess_image_for_cnn
 from src.model_handler import predict_hybrid
 
@@ -75,15 +76,15 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
             # 2.1.2: Conv Layer 1 (Laboratory)
             z_val1, actual_val1 = render_conv1_layer(cnn_extractor, img_batch, raw_ndarray)
             
-            # 2.1.3: ReLU Activation #1 (⚡ New Step)
-            render_relu_activation(z_val1, actual_val1)
-            
-            # 2.1.4: Conv Layer 2 (Deep Dive)
-            # Vì render_conv2_layer cần fmaps1, ta lấy fmaps1 bằng cách predict layer output
+            # Trích xuất fmaps1 (Kết quả của tầng Conv1 sau ReLU)
             layer_conv1 = [l for l in cnn_extractor.layers if "conv2d" in l.name.lower()][0]
             model_c1 = tf.keras.Model(inputs=cnn_extractor.input, outputs=layer_conv1.output)
             fmaps1 = model_c1.predict(img_batch, verbose=0)
+
+            # 2.1.3: ReLU Activation #1 (⚡ Heatmap Grid)
+            render_relu_activation(z_val1, actual_val1, fmaps1)
             
+            # 2.1.4: Conv Layer 2 (Deep Dive)
             fmaps2 = render_conv2_layer(cnn_extractor, img_batch, fmaps1)
             
             # 2.1.5: MaxPooling

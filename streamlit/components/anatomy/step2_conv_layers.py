@@ -63,7 +63,7 @@ def render_conv1_layer(cnn_extractor, img_batch, raw_ndarray):
     
     return total_l1, actual_val1
 
-def render_relu_activation(z_val, actual_val):
+def render_relu_activation(z_val, actual_val, fmaps1):
     """Bước 2.1.3: Kích hoạt Phi tuyến ReLU."""
     st.markdown("---")
     st.markdown("### ⚡ 2.1.3: Kích hoạt Phi tuyến (ReLU Activation)")
@@ -83,8 +83,20 @@ def render_relu_activation(z_val, actual_val):
         st.code(f"max(0, {z_val:.6f}) = {res_relu:.6f}")
         st.info(f"📍 **Đối chứng:** {actual_val:.6f}")
 
-    # Hiển thị Heatmap sau ReLU (chính là actual_val)
-    st.caption("Bản đồ đặc trưng lúc này đã loại bỏ hoàn toàn các giá trị âm (vùng tối).")
+    # Hiển thị Heatmap sau ReLU (Toàn bộ 32 Filter)
+    st.markdown("#### 🖼️ 2.1.3b: Bản đồ Đặc trưng sau Kích hoạt (Toàn bộ 32 Filter)")
+    st.caption("Dưới đây là 32 góc nhìn khác nhau của ảnh sau khi đã đi qua tầng đầu tiên. Các vùng sáng là nơi bộ lọc tìm thấy 'tín hiệu' đặc trưng (ví dụ: cạnh đứng, cung tròn...).")
+    
+    # Vẽ lưới 4x8
+    fig, axes = plt.subplots(8, 4, figsize=(12, 18))
+    for i, ax in enumerate(axes.flat):
+        if i < 32:
+            ax.imshow(fmaps1[0, :, :, i], cmap='viridis')
+            ax.set_title(f"F#{i}", fontsize=8)
+        ax.axis('off')
+    
+    plt.tight_layout()
+    st.pyplot(fig)
 
 def render_conv2_layer(cnn_extractor, img_batch, fmaps1):
     """Mổ xẻ Tầng Conv2D #2 (30x30 -> 28x28)."""
