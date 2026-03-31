@@ -168,4 +168,20 @@ def render_conv2_layer(cnn_extractor, img_batch, fmaps1):
     st.success(f"➡️ **Kết quả sau ReLU: {max(0, z_linear):.6f}**")
     st.info(f"📍 **Đối chứng:** Giá trị thực tế tại ô (0,0,f={f_out_idx}) là: **{actual_val2:.6f}** (Khớp tuyệt đối!)")
     
+    # --- MỚI: Hiển thị 64 Heatmap của Tầng 2 ---
+    st.markdown("---")
+    st.markdown("#### 🖼️ 2.1.4b: Bản đồ Đặc trưng sau Kích hoạt (Toàn bộ 64 Filter)")
+    st.caption("Dưới đây là 64 bản đồ đặc trưng bậc cao. Lúc này các nét pixel thô đã biến mất, nhường chỗ cho các khối hình học trừu tượng.")
+    
+    # Vẽ lưới 8x8 (64 Filter)
+    fig2, axes2 = plt.subplots(16, 4, figsize=(12, 32)) # Dùng 16x4 để hiển thị dọc dễ nhìn hơn trên web
+    for i, ax in enumerate(axes2.flat):
+        if i < 64:
+            ax.imshow(fmaps2[0, :, :, i], cmap='viridis')
+            ax.set_title(f"F#{i}", fontsize=8)
+        ax.axis('off')
+    
+    plt.tight_layout()
+    st.pyplot(fig2)
+
     return fmaps2
