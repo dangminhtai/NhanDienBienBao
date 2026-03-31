@@ -1,3 +1,8 @@
+import streamlit as st
+import numpy as np
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
 def render_pooling_layer(cnn_extractor, img_batch, fmaps2, pool1_out):
     """Mổ xẻ Tầng MaxPooling2D #1 (28x28 -> 14x14)."""
     st.markdown("### 🧹 2.1.5: Giải phẫu Gạn lọc (MaxPooling_1 - 14x14)")
