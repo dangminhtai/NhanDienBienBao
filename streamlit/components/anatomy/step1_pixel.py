@@ -33,3 +33,8 @@ def render_step1_pixel_tracking(image, current_dir):
             st.caption(f"💡 Anh thấy dấu '[ ]' bao quanh 32 con số không? Đó chính là minh chứng cho chiều rộng thực tế của mảng ndarray {raw_ndarray.shape}.")
         
         return raw_ndarray
+
+def get_pixel_data(image):
+    """Trích xuất ma trận pixel 32x32 thầm lặng."""
+    img_32x32 = image.resize((32, 32))
+    return np.array(img_32x32)

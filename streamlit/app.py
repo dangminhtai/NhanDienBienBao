@@ -96,6 +96,14 @@ def main():
         uploaded_file = st.file_uploader("📥 Chọn ảnh...", type=["jpg", "png", "jpeg"])
 
         if uploaded_file:
+            # Tự động Reset kết quả nếu đổi ảnh mới
+            if "last_uploaded_file" not in st.session_state or st.session_state["last_uploaded_file"] != uploaded_file.name:
+                st.session_state["last_uploaded_file"] = uploaded_file.name
+                if "predict_results" in st.session_state:
+                    st.session_state["predict_results"] = None
+                if "balloons_shown" in st.session_state:
+                    del st.session_state["balloons_shown"]
+
             image = Image.open(uploaded_file).convert("RGB")
             
             if app_mode == "Dự đoán nhanh (Single Sign)":
