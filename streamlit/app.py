@@ -601,7 +601,6 @@ Biển báo thường có chữ hoặc hình vẽ màu đen/trắng ở lõi, m�
                     st.write("### 🧹 Bước 7: Dọn dẹp chồng lấn (Non-Maximum Suppression - NMS)")
                     
                     if passed_rois and len(svm_passed) > 0:
-                        import numpy as np
                         
                         # Kịch bản giả lập NMS
                         sim_boxes = [item['rect'] for item in svm_passed]
@@ -617,6 +616,7 @@ Biển báo thường có chữ hoặc hình vẽ màu đen/trắng ở lõi, m�
                             
                             # Sinh 5 khung ảo ngẫu nhiên chệch hướng một chút, có điểm Confidence lẹt đẹt
                             for _ in range(5):
+                                import numpy as np
                                 dx = np.random.randint(-15, 15)
                                 dy = np.random.randint(-15, 15)
                                 dw = np.random.randint(-10, 20)
@@ -624,8 +624,53 @@ Biển báo thường có chữ hoặc hình vẽ màu đen/trắng ở lõi, m�
                                 sim_boxes.append((x + dx, y + dy, w + dw, h + dh))
                                 sim_probs.append(target_prob - np.random.uniform(0.1, 0.8))
 
+                        # --- TÍNH TOÁN VÀ MINH HỌA BẢNG SỐ LIỆU NMS ---
+                        import pandas as pd
+                        import numpy as np
+                        
+                        sorted_indices = np.argsort(sim_probs)[::-1]
+                        king_idx = sorted_indices[0]
+                        kx, ky, kw, kh = sim_boxes[king_idx]
+                        king_area = kw * kh
+                        
+                        table_data = []
+                        nms_thresh = det_params.get('nms_thresh', 0.3)
+                        
+                        for rank, idx in enumerate(sorted_indices):
+                            bx, by, bw, bh = sim_boxes[idx]
+                            prob = sim_probs[idx]
+                            
+                            if rank == 0:
+                                iou = 1.0
+                                status = "👑 VUA (Giữ lại)"
+                            else:
+                                xx1 = max(kx, bx)
+                                yy1 = max(ky, by)
+                                xx2 = min(kx + kw, bx + bw)
+                                yy2 = min(ky + kh, by + bh)
+                                inter_w = max(0, xx2 - xx1)
+                                inter_h = max(0, yy2 - yy1)
+                                inter_area = inter_w * inter_h
+                                union_area = king_area + (bw * bh) - inter_area
+                                iou = inter_area / union_area if union_area > 0 else 0
+                                
+                                if iou > nms_thresh:
+                                    status = f"❌ XÓA (IoU {iou:.2f} > {nms_thresh})"
+                                else:
+                                    status = "✅ GIỮ (Không đè lấp)"
+                                    
+                            table_data.append({
+                                'Hạng': f"#{rank+1}",
+                                'Điểm AI (Conf)': f"{prob:.2f}",
+                                'Tọa độ (x,y,w,h)': f"({bx}, {by}, {bw}, {bh})",
+                                'Độ đè lấp với VUA (IoU)': f"{iou:.2f}" if rank != 0 else "-",
+                                'Phán quyết NMS': status
+                            })
+                            
+                        df_nms = pd.DataFrame(table_data)
+
                         # Cắt một đoạn ảnh Zoom Cận Cảnh để xem rõ
-                        x, y, w, h = sim_boxes[0]
+                        x, y, w, h = sim_boxes[king_idx]
                         pad = 80
                         cx1 = max(0, x - pad)
                         cy1 = max(0, y - pad)
@@ -636,25 +681,26 @@ Biển báo thường có chữ hoặc hình vẽ màu đen/trắng ở lõi, m�
                         zoom_after = zoom_before.copy()
                         
                         # Chạy NMS trên mớ giả lập này
-                        final_boxes, keep_indices = cached_detector.nms(sim_boxes, sim_probs, threshold=det_params.get('nms_thresh', 0.3), return_indices=True)
+                        final_boxes, keep_indices = cached_detector.nms(sim_boxes, sim_probs, threshold=nms_thresh, return_indices=True)
                         
                         # Vẽ khung lên bản Phóng to (Cần dời hệ tọa độ về khung Zoom)
                         for idx, (bx, by, bw, bh) in enumerate(sim_boxes):
                             nx, ny = bx - cx1, by - cy1
-                            score_txt = f"{sim_probs[idx]:.1f}"
+                            score_txt = f"{sim_probs[idx]:.2f}"
                             cv2.rectangle(zoom_before, (nx, ny), (nx + bw, ny + bh), (0, 255, 255), 2)
                             cv2.putText(zoom_before, score_txt, (nx, max(ny-5, 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 255), 1)
                             
                         for idx in keep_indices:
                             bx, by, bw, bh = sim_boxes[idx]
                             nx, ny = bx - cx1, by - cy1
-                            score_txt = f"{sim_probs[idx]:.1f}"
+                            score_txt = f"{sim_probs[idx]:.2f}"
                             cv2.rectangle(zoom_after, (nx, ny), (nx + bw, ny + bh), (0, 255, 0), 3)
                             cv2.putText(zoom_after, f"VUA: {score_txt}", (nx, max(ny-5, 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                             
-                        st.write("#### 🔎 Soi cận cảnh NMS dọn dẹp chồng lấn (Phóng to)")
+                        st.write("#### 📊 Bảng thống kê thuật toán NMS So Đọ (Ai đè vùng của Vua sẽ bị chém)")
                         if is_simulated:
-                            st.caption("*(Thực tế tấm ảnh này chỉ chừa lại 1 khung sau Bước 6. Hệ thống tự tạo thêm 5 khung ảo lồng chéo nhau để Demo mô phỏng tình huống NMS 'thực chiến' cho bạn dễ hiểu).*")
+                            st.caption("*(Thực tế tấm ảnh này chỉ chừa lại 1 khung sau Bước 6. Để trực quan vấn đề, thuật toán được cài đặt mồi thêm 5 khung ảo chệch tọa độ ±15px ở trên để mô phỏng lỗi 'nhận diện lặp' của Quét Siêu Kênh, giúp bạn thấy RÕ mô hình NMS xử lý thế nào trong Bảng dưới đây).*")
+                        st.dataframe(df_nms, use_container_width=True)
                             
                         c7_1, c7_2 = st.columns(2)
                         with c7_1:
