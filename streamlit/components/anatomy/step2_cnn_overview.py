@@ -11,8 +11,9 @@ def render_cnn_overview(raw_ndarray, current_dir):
 
     # 2.0: Bản đồ dòng chảy (Architecture Map - Mermaid Edition)
     st.markdown("---")
-    st.markdown("### 🗺️ 2.0: Bản đồ Dòng chảy Đặc trưng (Full Flow)")
+    st.markdown("### 🗺️ 2.0: Bản đồ Tổng quan (Full Architecture Map)")
     
+    # ... (Mermaid code remains the same)
     mermaid_code = """
     graph TD
         %% --- BƯỚC 1 ---
@@ -21,7 +22,7 @@ def render_cnn_overview(raw_ndarray, current_dir):
         Input --> Norm
 
         %% --- KHỐI CONV 1 (TẦM SOÁT CẠNH) ---
-        subgraph "🧱 KHỐI CONV 1 (Sơ cấp)"
+        subgraph "🧱 2.1: KHỐI CONV 1 (Sơ cấp)"
             Norm --> C1["🔍 Conv2D (32 Filter, 3x3) <br/> 30x30x32"]
             C1 --> R1["⚡ ReLU Activation"]
             R1 --> C2["🔍 Conv2D (64 Filter, 3x3) <br/> 28x28x64"]
@@ -31,7 +32,7 @@ def render_cnn_overview(raw_ndarray, current_dir):
         end
 
         %% --- KHỐI CONV 2 (SOI CHI TIẾT) ---
-        subgraph "🧱 KHỐI CONV 2 (Trung cấp)"
+        subgraph "🧱 2.2: KHỐI CONV 2 (Trung cấp)"
             D1 --> C3["🧐 Conv2D (32 Filter, 3x3) <br/> 12x12x32"]
             C3 --> R3["⚡ ReLU Activation"]
             R3 --> C4["🧐 Conv2D (64 Filter, 3x3) <br/> 10x10x64"]
@@ -41,7 +42,7 @@ def render_cnn_overview(raw_ndarray, current_dir):
         end
 
         %% --- BƯỚC NÉN (FLATTEN & DENSE) ---
-        subgraph "🧬 BƯỚC NÉN (Định danh)"
+        subgraph "🧬 2.3: BƯỚC NÉN (Định danh)"
             D2 --> Flat["📏 Flatten (Duỗi thẳng) <br/> 1,600 con số"]
             Flat --> Dense["🧬 Dense (feature_dense) <br/> 256 Mã Gene"]
         end
@@ -61,7 +62,7 @@ def render_cnn_overview(raw_ndarray, current_dir):
         style P2 fill:#c8e6c9,stroke:#388e3c
     """
     
-    # Render Mermaid using HTML/JS
+    # Render Mermaid (Using components.html as before)
     import streamlit.components.v1 as components
     html = f"""
     <div id="mermaid-diag" class="mermaid" style="display: flex; justify-content: center;">
@@ -74,9 +75,12 @@ def render_cnn_overview(raw_ndarray, current_dir):
     """
     components.html(html, height=800, scrolling=True)
 
-    # 2.1: Tracking chuẩn hóa (Normalization)
+    # 2.1: KHỐI CONV 1 (Sơ cấp)
     st.markdown("---")
-    st.markdown("### 🛠️ 2.1: Phép chia Chuẩn hóa (Dữ liệu vào CNN)")
+    st.header("🧱 2.1: KHỐI CONV 1 (Sơ cấp)")
+    
+    # 2.1.1: Tracking chuẩn hóa (Normalization)
+    st.markdown("### 🛠️ 2.1.1: Phép chia Chuẩn hóa (Dữ liệu vào CNN)")
     normalized_rows = (raw_ndarray[0:3, :, 0]) / 255.0
     st.code(f"""
 # Công thức: raw_ndarray / 255.0

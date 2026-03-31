@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 def render_pooling_layer(cnn_extractor, img_batch, fmaps2):
     """Mổ xẻ Tầng MaxPooling2D #1 (28x28 -> 14x14)."""
-    st.markdown("### 🧹 2.2c: Giải phẫu Gạn lọc (MAX-POOL 14x14)")
+    st.markdown("### 🧹 2.1.4: Giải phẫu Gạn lọc (MaxPooling_1 - 14x14)")
     
     # 1. Trích xuất dữ liệu
     layer_pool1 = [l for l in cnn_extractor.layers if "pool" in l.name.lower()][0]

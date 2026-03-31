@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 def render_conv1_layer(cnn_extractor, img_batch, raw_ndarray):
     """Mổ xẻ Tầng Conv2D #1 (32x32 -> 30x30)."""
-    st.markdown("### 🔬 2.2: Giải phẫu Tầng Conv2D #1 (32x32 ➡️ 30x30)")
+    st.markdown("### 🔬 2.1.2: Giải phẫu Tầng Conv2D #1 (32x32 ➡️ 30x30)")
     
     # 1. Trích xuất dữ liệu
     layer_conv1 = [l for l in cnn_extractor.layers if "conv2d" in l.name.lower()][0]
@@ -52,7 +52,7 @@ def render_conv1_layer(cnn_extractor, img_batch, raw_ndarray):
 
 def render_conv2_layer(cnn_extractor, img_batch, fmaps1):
     """Mổ xẻ Tầng Conv2D #2 (30x30 -> 28x28)."""
-    st.markdown("### 🧬 2.2b: Giải mã Siêu Tích Chập (Deep Dive)")
+    st.markdown("### 🧬 2.1.3: Giải mã Siêu Tích Chập (Conv2D #2 - 3x3x32)")
     st.info("💡 **Hồi 1: Tại sao 30 giảm xuống 28?**\n\nKhi anh quét khung 3x3 trên lưới 30x30, vị trí tâm khung chỉ từ pixel thứ 1 đến thứ 28.")
     
     # Trích xuất dữ liệu
