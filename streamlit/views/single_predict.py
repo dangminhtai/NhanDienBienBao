@@ -51,7 +51,7 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
         confidence = res['confidence']
         img_batch = res['img_batch']
         raw_ndarray = res['raw_ndarray']
-        fmaps_cache = res['fmaps_cache']
+        fmaps_cache = res.get('fmaps_cache')
         
         result_name = class_names.get(prediction_id, "Không xác định")
 
@@ -90,6 +90,8 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                 
                 # 2.3: Feature Juicer (Dùng deep_features từ Cache)
                 render_dense_juicer(fmaps_cache['deep_features'])
+        else:
+            st.warning("⚠️ Hệ thống vừa cập nhật tính năng Turbo Cache. Vui lòng nhấn nút **[🔍 BẮT ĐẦU NHẬN DIỆN]** phía trên một lần nữa để kích hoạt bộ nhớ đệm siêu tốc!")
 
         # --- THÊM ẢNH META MINH HỌA ---
         meta_path = os.path.join(current_dir, "dataset", "Meta", f"{prediction_id}.png")
