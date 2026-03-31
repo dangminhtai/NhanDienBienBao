@@ -61,23 +61,35 @@ def render_conv1_layer(cnn_extractor, img_batch, raw_ndarray):
     st.code(f"{sum_r:.6f} (R) + {sum_g:.6f} (G) + {sum_b:.6f} (B) + {bias1_f:.6f} (Bias) = {total_l1:.6f}")
     st.warning(f"➡️ **Tổng Tuyến tính (Z): {total_l1:.6f}**")
     
-    st.latex(r"ReLU(Z) = \max(0, Z)")
-    st.success(f"➡️ **Kết quả sau ReLU: {max(0, total_l1):.6f}**")
-    st.info(f"📍 **Đối chứng:** Giá trị thực tế tại ô (0,0,f={f_idx}) là: **{actual_val1:.6f}** (Khớp tuyệt đối!)")
+    return total_l1, actual_val1
 
-    # 5. Heatmaps (Show top 8 filters for context)
-    st.markdown(f"**🖼️ Bản đồ đặc trưng (Top 8 / 32):**")
-    fig1, axes1 = plt.subplots(2, 4, figsize=(10, 5))
-    for i, ax in enumerate(axes1.flat):
-        if i < 8: ax.imshow(fmaps1[0, :, :, i], cmap='viridis')
-        ax.axis('off')
-    st.pyplot(fig1)
+def render_relu_activation(z_val, actual_val):
+    """Bước 2.1.3: Kích hoạt Phi tuyến ReLU."""
+    st.markdown("---")
+    st.markdown("### ⚡ 2.1.3: Kích hoạt Phi tuyến (ReLU Activation)")
     
-    return fmaps1
+    col_r1, col_r2 = st.columns([0.6, 0.4])
+    with col_r1:
+        st.latex(r"f(z) = \max(0, z)")
+        st.info("""
+        **Tại sao cần ReLU?**
+        Nếu không có ReLU, mạng Nơ-ron chỉ là một chuỗi các phép nhân ma trận tuyến tính (giống như giải phương trình bậc 1). 
+        ReLU giúp mạng học được các cấu trúc phức tạp (phi tuyến) như đường cong, góc cạnh biển báo.
+        """)
+    
+    with col_r2:
+        res_relu = max(0, z_val)
+        st.success(f"**Kết quả cực kỳ chuẩn xác:**")
+        st.code(f"max(0, {z_val:.6f}) = {res_relu:.6f}")
+        st.info(f"📍 **Đối chứng:** {actual_val:.6f}")
+
+    # Hiển thị Heatmap sau ReLU (chính là actual_val)
+    st.caption("Bản đồ đặc trưng lúc này đã loại bỏ hoàn toàn các giá trị âm (vùng tối).")
 
 def render_conv2_layer(cnn_extractor, img_batch, fmaps1):
     """Mổ xẻ Tầng Conv2D #2 (30x30 -> 28x28)."""
-    st.markdown("### 🧬 2.1.3: Giải mã Siêu Tích Chập (Conv2D #2 - 3x3x32)")
+    st.markdown("---")
+    st.markdown("### 🧬 2.1.4: Tích chập Nâng cao (Conv2D #2 - 3x3x32)")
     st.info("💡 **Hồi 1: Tại sao 30 giảm xuống 28?**\n\nKhi anh quét khung 3x3 trên lưới 30x30, vị trí tâm khung chỉ từ pixel thứ 1 đến thứ 28.")
     
     # Trích xuất dữ liệu

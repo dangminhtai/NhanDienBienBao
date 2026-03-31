@@ -6,7 +6,7 @@ from src.model_handler import predict_hybrid
 # Import các tiểu mô-đun giải phẫu (SOLID Components)
 from components.anatomy.step1_pixel import render_step1_pixel_tracking
 from components.anatomy.step2_cnn_overview import render_cnn_overview
-from components.anatomy.step2_conv_layers import render_conv1_layer, render_conv2_layer
+from components.anatomy.step2_conv_layers import render_conv1_layer, render_relu_activation, render_conv2_layer
 from components.anatomy.step2_pooling import render_pooling_layer
 from components.anatomy.step2_juicer import render_dense_juicer
 
@@ -73,12 +73,20 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
             render_cnn_overview(raw_ndarray, current_dir)
             
             # 2.1.2: Conv Layer 1 (Laboratory)
-            fmaps1 = render_conv1_layer(cnn_extractor, img_batch, raw_ndarray)
+            z_val1, actual_val1 = render_conv1_layer(cnn_extractor, img_batch, raw_ndarray)
             
-            # 2.1.3: Conv Layer 2 (Deep Dive)
+            # 2.1.3: ReLU Activation #1 (⚡ New Step)
+            render_relu_activation(z_val1, actual_val1)
+            
+            # 2.1.4: Conv Layer 2 (Deep Dive)
+            # Vì render_conv2_layer cần fmaps1, ta lấy fmaps1 bằng cách predict layer output
+            layer_conv1 = [l for l in cnn_extractor.layers if "conv2d" in l.name.lower()][0]
+            model_c1 = tf.keras.Model(inputs=cnn_extractor.input, outputs=layer_conv1.output)
+            fmaps1 = model_c1.predict(img_batch, verbose=0)
+            
             fmaps2 = render_conv2_layer(cnn_extractor, img_batch, fmaps1)
             
-            # 2.1.4: MaxPooling
+            # 2.1.5: MaxPooling
             render_pooling_layer(cnn_extractor, img_batch, fmaps2)
             
             # 2.3: Feature Juicer
