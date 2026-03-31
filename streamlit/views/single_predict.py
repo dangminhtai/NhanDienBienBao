@@ -73,11 +73,15 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                 st.caption("Dữ liệu lúc này đã là số thực [0, 1]. Đây là 'thức ăn' chuẩn cho các Nơ-ron.")
 
                 # ---------------------------------------------------------
-                # 2.2: DEEP TRACKING - X-QUANG TẦNG CONVOLUTION & GIẢI PHẪU PHÉP NHÂN
+                # 2.2: GIẢI PHẪU TOÁN HỌC - 32 KERNELS ➡️ 32 FEATURE MAPS
                 # ---------------------------------------------------------
-                st.markdown("### 🔬 2.2: Giải phẫu Phép nhân Tích chập (Dot Product)")
-                st.caption("Đây là 'Hộp đen' toán học bấy lâu nay. Hãy xem CNN tính toán 1 điểm trên Bản đồ nhiệt như thế nào:")
+                st.markdown("### 🔬 2.2: Giải phẫu 32 Bộ lọc (Kernels) ➡️ 32 Feature Maps")
+                st.caption("Mỗi Kernel (Bộ lọc) là một ma trận 3x3 riêng biệt, tạo ra một Bản đồ nhiệt riêng biệt.")
                 
+                # Công thức tính Shape bám sát yêu cầu
+                st.latex(r"H_{out} = \frac{H_{in} + 2 \cdot padding - H_k}{stride} + 1")
+                st.info("💡 **Áp dụng:** Input 32x32, Kernel 3x3, Padding 0, Stride 1 ➡️ **(32 - 3)/1 + 1 = 30**. Đó là lý do Shape chuyển sang 30x30.")
+
                 import matplotlib.pyplot as plt
                 import tensorflow as tf
                 import numpy as np
@@ -100,29 +104,33 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                         feature_maps = debug_model.predict(img_batch, verbose=0)
                         actual_value = feature_maps[0, 0, 0, 0]
 
-                        # 4. Hiển thị mô phỏng phép tính
-                        col_m1, col_m2, col_m3 = st.columns([1, 1, 1])
+                        # 4. Hiển thị mô phỏng phép tính theo dạng bảng
+                        st.markdown("**🎲 Mô phỏng Phép toán tại Tọa độ (0,0):**")
+                        col_m1, col_m2, col_m3 = st.columns([1, 1, 1.2])
                         with col_m1:
-                            st.markdown("**1. Vùng ảnh 3x3 (Input)**")
-                            st.code(f"{input_patch}", language="python")
+                            st.markdown("📷 **Mảnh ảnh (I)**")
+                            st.write(input_patch)
                         with col_m2:
-                            st.markdown("**2. Bộ lọc (Kernel #0)**")
-                            st.code(f"{kernel_0}", language="python")
+                            st.markdown("🔍 **Bộ lọc (K)**")
+                            st.write(kernel_0)
                         with col_m3:
-                            st.markdown("**3. Kết quả (Dot Product)**")
+                            st.markdown("🎯 **Kết quả (O)**")
                             calc_sum = np.sum(input_patch * kernel_0)
-                            st.code(f"Sum: {calc_sum:.4f}\n+ Bias: {bias_0:.4f}\n= Output: {actual_value:.4f}", language="python")
+                            st.success(f"$\sum(I \cdot K) = {calc_sum:.4f}$")
+                            st.success(f"$+ Bias = {bias_0:.4f}$")
+                            st.success(f"$= {actual_value:.4f}$")
 
-                        st.info(f"💡 **Sự thật:** Con số `{actual_value:.4f}` chính là giá trị tại điểm Tọa độ (0,0) trên Bản đồ nhiệt dưới đây!")
+                        st.markdown(f"> **Giải mã:** Giá trị `{actual_value:.4f}` chính là độ sáng của ô đầu tiên trong 32 heatmap dưới đây.")
 
                         # 5. Vẽ 8 feature maps đầu tiên
                         fig, axes = plt.subplots(2, 4, figsize=(10, 5))
                         for i, ax in enumerate(axes.flat):
                             if i < 8:
                                 ax.imshow(feature_maps[0, :, :, i], cmap='viridis')
+                                ax.set_title(f"Filter #{i}")
                             ax.axis('off')
                         st.pyplot(fig)
-                        st.caption(f"8 Bản đồ nhiệt (Heatmaps) đầu tiên. Điểm sáng rực chính là nơi có kết quả phép nhân lớn nhất!")
+                        st.caption("Trực quan 8/32 Feature Maps. Mỗi cái là kết quả của một phép nhân ma trận (Dot Product) khổng lồ.")
 
                     except Exception as e:
                         st.warning(f"Lỗi khi mổ xẻ toán học: {str(e)}")
