@@ -76,11 +76,16 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                 # 2.2: GIẢI PHẪU TOÁN HỌC - 32 KERNELS ➡️ 32 FEATURE MAPS
                 # ---------------------------------------------------------
                 st.markdown("### 🔬 2.2: Giải phẫu 32 Bộ lọc (Kernels) ➡️ 32 Feature Maps")
-                st.caption("Mỗi Kernel (Bộ lọc) là một ma trận 3x3 riêng biệt, tạo ra một Bản đồ nhiệt riêng biệt.")
+                st.caption("Dưới đây là bộ đôi công thức xác định kích thước đầu ra (Output Shape) của tầng Conv2D:")
                 
-                # Công thức tính Shape bám sát yêu cầu
-                st.latex(r"H_{out} = \frac{H_{in} + 2 \cdot padding - H_k}{stride} + 1")
-                st.info("💡 **Áp dụng:** Input 32x32, Kernel 3x3, Padding 0, Stride 1 ➡️ **(32 - 3)/1 + 1 = 30**. Đó là lý do Shape chuyển sang 30x30.")
+                # Hệ công thức kép H_out và W_out
+                st.latex(r"""
+                \begin{cases} 
+                H_{out} = \lfloor \frac{H_{in} + 2 \cdot P - H_k}{S} \rfloor + 1 \\
+                W_{out} = \lfloor \frac{W_{in} + 2 \cdot P - W_k}{S} \rfloor + 1 
+                \end{cases}
+                """)
+                st.info("💡 **Thực tế mô hình:** Input 32x32, Kernel 3x3, P=0, S=1 ➡️ **H=30, W=30**. Kết quả là 32 khối mảng (30, 30).")
 
                 import matplotlib.pyplot as plt
                 import tensorflow as tf
@@ -104,23 +109,34 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                         feature_maps = debug_model.predict(img_batch, verbose=0)
                         actual_value = feature_maps[0, 0, 0, 0]
 
-                        # 4. Hiển thị mô phỏng phép tính theo dạng bảng
-                        st.markdown("**🎲 Mô phỏng Phép toán tại Tọa độ (0,0):**")
-                        col_m1, col_m2, col_m3 = st.columns([1, 1, 1.2])
+                        # 4. Hiển thị mô phỏng phép tính CHI TIẾT
+                        st.markdown("**🎲 Quy trình Tích chập tại tọa độ (0,0):**")
+                        
+                        # Bước 1: Hiển thị các thành phần
+                        col_m1, col_m2 = st.columns([1, 1])
                         with col_m1:
-                            st.markdown("📷 **Mảnh ảnh (I)**")
+                            st.markdown("📷 **Mảnh ảnh (Input I)**")
                             st.write(input_patch)
                         with col_m2:
-                            st.markdown("🔍 **Bộ lọc (K)**")
+                            st.markdown("🔍 **Bộ lọc (Kernel K)**")
                             st.write(kernel_0)
-                        with col_m3:
-                            st.markdown("🎯 **Kết quả (O)**")
-                            calc_sum = np.sum(input_patch * kernel_0)
-                            st.success(f"$\sum(I \cdot K) = {calc_sum:.4f}$")
-                            st.success(f"$+ Bias = {bias_0:.4f}$")
-                            st.success(f"$= {actual_value:.4f}$")
 
-                        st.markdown(f"> **Giải mã:** Giá trị `{actual_value:.4f}` chính là độ sáng của ô đầu tiên trong 32 heatmap dưới đây.")
+                        # Bước 2: Nhân từng phần tử (Element-wise product)
+                        st.markdown("➡️ **Bước 2.1: Nhân từng phần tử ($I \cdot K$)**")
+                        element_wise = input_patch * kernel_0
+                        st.write(element_wise)
+                        st.caption("Đây là kết quả sau khi 'chồng' bộ lọc lên tấm ảnh. Số dương lớn = đặc điểm khớp mạnh.")
+
+                        # Bước 3: Tổng hợp và Bias
+                        st.markdown("➡️ **Bước 2.2: Tổng hợp & Kích hoạt**")
+                        calc_sum = np.sum(element_wise)
+                        
+                        c1, c2, c3 = st.columns(3)
+                        c1.metric("Tổng các ô trên", f"{calc_sum:.4f}")
+                        c2.metric("Bias (Sai số)", f"{bias_0:.4f}")
+                        c3.metric("KẾT QUẢ CUỐI", f"{actual_value:.4f}", border=True)
+
+                        st.markdown(f"> **💡 Kết nối:** Giá trị `{actual_value:.4f}` chính là 'độ sáng' của điểm đầu tiên trên 32 heatmap (Filter #0) dưới đây.")
 
                         # 5. Vẽ 8 feature maps đầu tiên
                         fig, axes = plt.subplots(2, 4, figsize=(10, 5))
@@ -130,7 +146,7 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                                 ax.set_title(f"Filter #{i}")
                             ax.axis('off')
                         st.pyplot(fig)
-                        st.caption("Trực quan 8/32 Feature Maps. Mỗi cái là kết quả của một phép nhân ma trận (Dot Product) khổng lồ.")
+                        st.caption("8/32 Feature Maps. AI đang 'soi' ra 32 bộ hồ sơ khác nhau từ cùng 1 bức ảnh của anh.")
 
                     except Exception as e:
                         st.warning(f"Lỗi khi mổ xẻ toán học: {str(e)}")
