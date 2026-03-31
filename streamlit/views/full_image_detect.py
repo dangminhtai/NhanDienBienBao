@@ -47,9 +47,42 @@ def render_full_image_view(image, class_names, current_dir, det_params, auto_tun
             st.image(cl, caption="3. Cân bằng Histogram (CLAHE)", use_container_width=True, clamp=True)
         with col4:
             st.image(img_clahe_pil, caption="4. Trả lại mảng Màu (A,B)", use_container_width=True)
-            
+
+        st.write("#### 📐 Toán học Lõi: Biến đổi Phân bố Tích lũy (CDF) và Giới hạn Kéo dãn")
+        
+        # Bắt đầu vẽ Biểu đồ Histogram Real-time
+        import matplotlib.pyplot as plt
+        
+        fig, ax = plt.subplots(1, 2, figsize=(10, 3))
+        
+        # Tính toán Histogram
+        hist_l = cv2.calcHist([l], [0], None, [256], [0, 256])
+        hist_cl = cv2.calcHist([cl], [0], None, [256], [0, 256])
+        
+        # Vẽ biểu đồ kênh sáng Gốc
+        ax[0].plot(hist_l, color='gray')
+        ax[0].fill_between(range(256), hist_l.flatten(), color='gray', alpha=0.3)
+        ax[0].set_title('Mật độ sáng (Gốc) - Phân bố hẹp', fontsize=10)
+        ax[0].set_xlim([0, 256])
+        
+        # Vẽ biểu đồ kênh sáng CLAHE
+        ax[1].plot(hist_cl, color='blue')
+        ax[1].fill_between(range(256), hist_cl.flatten(), color='blue', alpha=0.3)
+        ax[1].set_title('Mật độ sáng (CLAHE) - Giãn phổ & Cắt ngọn (ClipLimit)', fontsize=10)
+        ax[1].set_xlim([0, 256])
+        
+        # Căn chỉnh để gọn gàng
+        plt.tight_layout()
+        st.pyplot(fig)
+        
+        st.write("#### 📐 Công thức nội suy (Thực tế):")
+        st.latex(r"CDF(x) = \frac{\text{Số phần tử } \le x}{\text{Tổng số phần tử}}")
+        st.latex(r"\text{new\_value} = \text{round}(CDF(x) \times 255)")
+        
         st.info("""
-        Bước này để xử lý các biển báo bị ngược sáng trong bóng râm, dùng CLAHE để đảm bao các biển báo tối màu sẽ giữ được đặc trung của nó
+**Tại sao lại có màn biến đổi này?** 
+Biển báo nằm trong bóng râm sẽ có điểm ảnh bị "túm tụm" lại ở vùng tối (giống như biểu đồ Gốc bên trái, chóp nhọn nằm lệch về gần số 0). Máy móc không thể nhìn thấy chữ bên trong góc tối đó.
+Bằng thuật toán CLAHE lưới 8x8, máy sẽ tính **Hàm phân bố Tích phân (CDF)** bình dân như trên để đùn dãn các giá trị pixel ra xa nhau. Lúc này chi tiết biển báo sẽ rực sáng lên mà không làm mất đi các sắc xám gốc (Nhìn vào Biểu đồ bên phải, phổ ánh sáng đã được trải dài đều từ 0 đến 255).
         """)
         st.divider()
         
