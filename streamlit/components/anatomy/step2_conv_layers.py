@@ -98,22 +98,7 @@ def render_relu_activation(z_val, actual_val, fmaps1):
     plt.tight_layout()
     st.pyplot(fig)
 
-def render_conv2_layer(cnn_extractor, img_batch, fmaps1):
-    """Mổ xẻ Tầng Conv2D #2 (30x30 -> 28x28)."""
-    st.markdown("---")
-    st.markdown("### 🧬 2.1.4: Tích chập Nâng cao (Conv2D #2 - 3x3x32)")
-    st.info("💡 **Hồi 1: Tại sao 30 giảm xuống 28?**\n\nKhi anh quét khung 3x3 trên lưới 30x30, vị trí tâm khung chỉ từ pixel thứ 1 đến thứ 28.")
-    
-    # Trích xuất dữ liệu
-    layer_conv2 = [l for l in cnn_extractor.layers if "conv2d" in l.name.lower()][1]
-    weights2, biases2 = layer_conv2.get_weights()
-    bias2_0 = biases2[0]
-    
-    model2 = tf.keras.Model(inputs=cnn_extractor.input, outputs=layer_conv2.output)
-    fmaps2 = model2.predict(img_batch, verbose=0)
-    actual_val2 = fmaps2[0, 0, 0, 0]
-
-def render_conv2_layer(cnn_extractor, img_batch, fmaps1):
+def render_conv2_layer(cnn_extractor, img_batch, fmaps1, fmaps2):
     """Mổ xẻ Tầng Conv2D #2 (30x30 -> 28x28)."""
     st.markdown("---")
     st.markdown("### 🧬 2.1.4: Tích chập Nâng cao (Conv2D #2 - 3x3x32)")
@@ -136,8 +121,6 @@ def render_conv2_layer(cnn_extractor, img_batch, fmaps1):
     )
 
     bias2_f = biases2[f_out_idx]
-    model2 = tf.keras.Model(inputs=cnn_extractor.input, outputs=layer_conv2.output)
-    fmaps2 = model2.predict(img_batch, verbose=0)
     actual_val2 = fmaps2[0, 0, 0, f_out_idx]
 
     st.markdown(f"#### 🧪 Phòng thí nghiệm: Cách 32 tầng đặc trưng hội quân thành Filter #{f_out_idx}")

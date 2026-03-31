@@ -1,9 +1,4 @@
-import streamlit as st
-import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
-
-def render_pooling_layer(cnn_extractor, img_batch, fmaps2):
+def render_pooling_layer(cnn_extractor, img_batch, fmaps2, pool1_out):
     """Mổ xẻ Tầng MaxPooling2D #1 (28x28 -> 14x14)."""
     st.markdown("### 🧹 2.1.5: Giải phẫu Gạn lọc (MaxPooling_1 - 14x14)")
     st.info("💡 **Góc nhìn thực tế:** Maxwelling sẽ quét qua từng vùng 2x2 và chỉ giữ lại 'người mạnh nhất' (giá trị lớn nhất).")
@@ -18,11 +13,7 @@ def render_pooling_layer(cnn_extractor, img_batch, fmaps2):
     with col_s2:
         x_idx = st.slider("📍 Chọn tọa độ X (Cột):", 0, 13, 0)
 
-    # 3. Trích xuất dữ liệu
-    layer_pool1 = [l for l in cnn_extractor.layers if "pool" in l.name.lower()][0]
-    modelp = tf.keras.Model(inputs=cnn_extractor.input, outputs=layer_pool1.output)
-    outp = modelp.predict(img_batch, verbose=0)
-    
+    # 3. Trích xuất dữ liệu (ĐÃ CÓ TỪ CACHE)
     # Tọa độ thực tế trên map 28x28
     y_start, x_start = y_idx * 2, x_idx * 2
     

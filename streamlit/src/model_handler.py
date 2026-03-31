@@ -79,6 +79,51 @@ def load_detection_system():
         st.error(f"❌ Lỗi khi tải hệ thống Detection: {str(e)}")
         return None, None
 
+@st.cache_data(show_spinner=False)
+def extract_all_fmaps(cnn_extractor, image_batch):
+    """
+    Trích xuất toàn bộ bản đồ đặc trưng (Feature Maps) trong một lần chạy duy nhất.
+    Sử dụng Multi-output Model để tối ưu hóa hiệu năng.
+    """
+    try:
+        # Tìm các lớp quan trọng dựa trên tên hoặc kiểu lớp
+        layers_to_extract = []
+        layer_names = []
+        
+        # 1. Lớp Conv2D đầu tiên
+        conv1 = [l for l in cnn_extractor.layers if "conv2d" in l.name.lower()][0]
+        layers_to_extract.append(conv1.output)
+        layer_names.append("fmaps1")
+        
+        # 2. Lớp Conv2D thứ hai
+        conv2 = [l for l in cnn_extractor.layers if "conv2d" in l.name.lower()][1]
+        layers_to_extract.append(conv2.output)
+        layer_names.append("fmaps2")
+        
+        # 3. Lớp MaxPooling đầu tiên
+        pool1 = [l for l in cnn_extractor.layers if "pool" in l.name.lower()][0]
+        layers_to_extract.append(pool1.output)
+        layer_names.append("pool1_out")
+        
+        # 4. Lớp Dense cuối cùng (Bộ trích xuất 256 đặc trưng)
+        # Thông thường là lớp cuối cùng của extractor này
+        dense_out = cnn_extractor.layers[-1].output
+        layers_to_extract.append(dense_out)
+        layer_names.append("deep_features")
+        
+        # Tạo mô hình đa đầu ra
+        multi_output_model = tf.keras.Model(inputs=cnn_extractor.input, outputs=layers_to_extract)
+        
+        # Dự đoán một lần duy nhất
+        outputs = multi_output_model.predict(image_batch, verbose=0)
+        
+        # Đóng gói vào Dictionary
+        results = {name: out for name, out in zip(layer_names, outputs)}
+        return results
+    except Exception as e:
+        st.error(f"❌ Lỗi khi trích xuất Feature Maps: {str(e)}")
+        return None
+
 def predict_hybrid(image_batch, cnn_extractor, scaler, svm_model):
     """
     Quy trình dự đoán lai ghép:
