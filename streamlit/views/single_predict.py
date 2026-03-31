@@ -57,7 +57,7 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                     st.code(f"# ndarray {raw_ndarray.shape}\n# Kiểu dữ liệu: {raw_ndarray.dtype}\n{sample_matrix}", language="python")
                     st.caption("Ví dụ ma trận 5x5 (Kênh R). Các giá trị nguyên [0, 255] bám sát Notebook.")
 
-            with st.expander("📌 Bước 2: Truy vết Biến đổi Kỹ thuật (CNN Tracking - Plan 2)"):
+            with st.expander("📌 Bước 2: X-Quang Hệ thần kinh CNN (Deep Tracking - Plan 2 Sâu)"):
                 # Hiển thị nội dung plan2.md để dẫn dắt kỹ thuật
                 plan2_path = os.path.join(current_dir, "docs", "predict", "plans", "plan2.md")
                 if os.path.exists(plan2_path):
@@ -67,40 +67,69 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                 # ---------------------------------------------------------
                 # 2.1: TRACKING CHUẨN HÓA (NORMALIZATION)
                 # ---------------------------------------------------------
-                st.markdown("### 🛠️ 2.1: Phép chia Chuẩn hóa (0-255 ➡️ 0-1)")
+                st.markdown("### 🛠️ 2.1: Phép chia Chuẩn hóa (Dữ liệu vào CNN)")
                 normalized_matrix = raw_ndarray[0:5, 0:5, 0] / 255.0
-                st.code(f"# Công thức: matrix / 255.0\n# Kết quả mẫu (5x5 Kênh R):\n{normalized_matrix}", language="python")
-                st.caption("Dữ liệu đã được đưa về đoạn [0, 1] để Keras xử lý tối ưu hơn.")
+                st.code(f"# Công thức: matrix / 255.0\n# Kết quả 5 dòng đầu (Kênh R):\n{normalized_matrix}", language="python")
+                st.caption("Dữ liệu lúc này đã là số thực [0, 1]. Đây là 'thức ăn' chuẩn cho các Nơ-ron.")
 
                 # ---------------------------------------------------------
-                # 2.2: TRACKING SHAPE CNN LAYERS
+                # 2.2: DEEP TRACKING - X-QUANG TẦNG CONVOLUTION
                 # ---------------------------------------------------------
-                st.markdown("### 🔬 2.2: Dây chuyền Tích chập (CNN Layers Tracking)")
+                st.markdown("### 🔬 2.2: X-Quang Tầng soi (Feature Maps)")
+                st.caption("Dưới đây là 8 'mắt nhìn' đầu tiên của CNN. Anh sẽ thấy nó bóc tách biên giới và màu sắc biển báo:")
                 
-                # Bảng tracking bám sát code .py
-                tracking_data = [
-                    {"Hàm (Function)": "Input Data", "Shape": "(32, 32, 3)", "Dữ liệu": "3072 pixel rỗ hột."},
-                    {"Hàm (Function)": "Conv 1 & 2 (Filters: 64)", "Shape": "(28, 28, 64)", "Dữ liệu": "Quét đặc trưng biên/màu."},
-                    {"Hàm (Function)": "MaxPooling 1 (2x2)", "Shape": "(14, 14, 64)", "Dữ liệu": "Gạn lọc thông tin (Nén)."},
-                    {"Hàm (Function)": "Conv 3 & 4 (Filters: 64)", "Shape": "(10, 10, 64)", "Dữ liệu": "Quét đặc trưng sâu."},
-                    {"Hàm (Function)": "MaxPooling 2 (2x2)", "Shape": "(5, 5, 64)", "Dữ liệu": "Cô đặc tối đa."},
-                ]
-                st.table(tracking_data)
-                
+                import matplotlib.pyplot as plt
+                import tensorflow as tf
+
+                # Tạo mô hình phụ để trích xuất Feature Maps (Tầng Conv đầu tiên)
+                try:
+                    # Lấy layer Conv2D đầu tiên (thường là index 0 hoặc 1)
+                    conv_layer = cnn_extractor.layers[0] 
+                    debug_model = tf.keras.Model(inputs=cnn_extractor.input, outputs=conv_layer.output)
+                    feature_maps = debug_model.predict(img_batch, verbose=0) # Shape (1, 30, 30, 32)
+                    
+                    # Vẽ 8 feature maps đầu tiên
+                    fig, axes = plt.subplots(2, 4, figsize=(10, 5))
+                    for i, ax in enumerate(axes.flat):
+                        if i < 8:
+                            ax.imshow(feature_maps[0, :, :, i], cmap='viridis')
+                        ax.axis('off')
+                    st.pyplot(fig)
+                    st.caption("8 Bản đồ nhiệt (Heatmaps) đầu tiên: Chỗ tím/xanh là tối, chỗ vàng rực là nơi CNN 'dính' đặc điểm mạnh.")
+                except Exception as e:
+                    st.warning(f"Không thể hiển thị Heatmap: {str(e)}")
+
                 # ---------------------------------------------------------
-                # 2.3: TRACKING KẾT QUẢ VECTOR (RESULT)
+                # 2.2b: TRACKING MA TRẬN TRUNG GIAN (POOLING)
                 # ---------------------------------------------------------
-                st.markdown("### 📊 2.3: Chốt hạ Đặc trưng (Dense 256 Tracking)")
+                st.markdown("### 🧹 2.2b: Tracking Ma trận sau Gạn lọc (Pooling)")
+                try:
+                    # Lấy layer Pooling cuối cùng (thường là layer trước Flatten)
+                    # Trong architecture của user, MaxPooling2D cuối là layer index 6
+                    pool_layer = cnn_extractor.layers[6] 
+                    pool_model = tf.keras.Model(inputs=cnn_extractor.input, outputs=pool_layer.output)
+                    pool_output = pool_model.predict(img_batch, verbose=0) # Shape (1, 5, 5, 64)
+                    
+                    st.code(f"# Shape sau Pooling: {pool_output.shape}\n# Ma trận 5x5 của Lớp đặc trưng số 0:\n{pool_output[0, :, :, 0]}", language="python")
+                    st.caption("Anh thấy không? Lúc này không còn là pixel màu nữa, mà là 'Cường độ đặc trưng'.")
+                except:
+                    st.caption("Dữ liệu nén quá sâu (5x5). Đã sẵn sàng để Trải phẳng.")
+
+                # ---------------------------------------------------------
+                # 2.3: GIẢI PHẪU PHÉP NÉN (FLATTEN TO DENSE)
+                # ---------------------------------------------------------
+                st.markdown("### 📊 2.3: Giải phẫu Phép nén (Flatten ➡️ 256)")
+                st.caption("1.600 con số trung gian (5x5x64) được duỗi thẳng và nén về 256 Ý chính:")
                 
                 # Trình trích xuất đặc trưng thực tế
                 deep_features = cnn_extractor.predict(img_batch, verbose=0)[0]
                 
-                st.code(f"# Shape cuối: (256,)\n# Mẫu 10 giá trị đầu tiên:\n{deep_features[:10]}", language="python")
+                st.code(f"# Vector định danh (256,)\n# Mẫu 10 giá trị đầu tiên:\n{deep_features[:10]}", language="python")
 
                 import pandas as pd
                 df_features = pd.DataFrame(deep_features, columns=["Giá trị Đặc trưng"])
                 st.bar_chart(df_features, use_container_width=True, height=200)
-                st.success(f"✅ Hoàn tất mổ xẻ Bước 2: Từ 3072 pixel ➡️ {len(deep_features)} đặc trưng tinh túy.")
+                st.success(f"✅ Đã 'soi thấu' hoàn toàn Bước 2. Cỗ máy đã hiểu đây là cái gì!")
 
             # --- THÊM ẢNH META MINH HỌA ---
             meta_path = os.path.join(current_dir, "dataset", "Meta", f"{prediction_id}.png")
