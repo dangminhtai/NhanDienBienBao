@@ -10,9 +10,12 @@ def render_dense_juicer(deep_features):
     
     # 3. Hiển thị (Dùng Dữ liệu từ Cache)
     st.markdown("💡 **Mã Gene DNA:** 256 chỉ số định danh duy nhất.")
-    st.code(f"# 10 'Mã Gene' đầu tiên:\n{deep_features[:10]}")
+    
+    # Đảm bảo dữ liệu là mảng 1D để hiển thị và vẽ biểu đồ
+    features_1d = deep_features.flatten()
+    st.code(f"# 10 'Mã Gene' đầu tiên:\n{features_1d[:10]}")
     
     import pandas as pd
-    df_features = pd.DataFrame(deep_features, columns=["Cường độ"])
+    df_features = pd.DataFrame(features_1d, columns=["Cường độ"])
     st.bar_chart(df_features, use_container_width=True, height=200)
     st.success("✅ CNN đã bàn giao bộ Mã DNA cho SVM!")
