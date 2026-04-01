@@ -144,7 +144,6 @@ y_test = test_labels
 import tensorflow as tf
 from tensorflow.keras.utils import to_categorical
 
-# Chuẩn hóa ảnh về dải [0, 1]
 X_train_norm = X_train_raw / 255.0
 X_test_norm = X_test_raw / 255.0
 

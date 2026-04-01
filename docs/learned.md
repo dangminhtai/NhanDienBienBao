@@ -31,3 +31,39 @@
 - **Tham số HOG**: Cần khớp chính xác số lượng đặc trưng (ví dụ: 324) với kích thước ROI (32x32) để đảm bảo scaler hoạt động đúng.
 - **NMS (Non-Maximum Suppression)**: Là thành phần bắt buộc trong bất kỳ pipeline Detection nào để dọn dẹp các hộp phát hiện dư thừa.
 - **Streamlit Wide Layout**: Phù hợp cho việc hiển thị các kết quả phân tích phức tạp và nhiều ảnh cùng lúc.
+
+## Tài liệu hóa Kỹ thuật (Technical Documentation)
+- **Truy vết Toán học (Mathematical Tracking)**: Việc tài liệu hóa trực tiếp từ mã triển khai thực tế (như notebook) giúp báo cáo có chiều sâu và tính thuyết phục cao.
+- **Biểu diễn Công thức**: Sử dụng LaTeX để biểu diễn các khái niệm như Gradient, RBF Kernel, hay IoU giúp chuẩn hóa ngôn ngữ toán học trong báo cáo AI chuyên nghiệp.
+- **Kết nối Lý thuyết và Thực thi**: Luôn liên kết các hằng số cụ thể trong code (như ngưỡng lọc Hue 0-10) với ý nghĩa vật lý/toán học của chúng (tính tuần hoàn của không gian màu).
+
+## Khai thác Dữ liệu (Data Mining)
+- **Hard Negative Mining (HNM)**: Việc chọn mẫu âm (Negative) có chiến thuật (dựa trên IoU < 0.1) quan trọng hơn việc lấy mẫu âm ngẫu nhiên tràn lan. Điều này giúp SVM có ranh giới quyết định (Decision Boundary) sắc nét hơn.
+- **Tỷ lệ Mẫu (Sampling Ratio)**: Duy trì tỷ lệ Negative gấp 2 lần Positive là một kinh nghiệm tốt cho bài toán Detection để giảm thiểu False Positives ngay từ tầng lọc đầu tiên.
+
+## Đặc trưng HOG (HOG Features)
+- **Chuẩn hóa $L_2$-Hys**: Cực kỳ hiệu quả cho tập dữ liệu có độ tương phản thay đổi mạnh như GTSDB. Hạn chế giá trị 0.2 giúp tránh "Saturation" của Gradient.
+- **Tính toán số chiều**: Việc khớp tham số `pixels_per_cell` và `cells_per_block` với kích thước ảnh ROI ($32 \times 32 \rightarrow 324$ features) là bước cơ bản để đảm bảo SVM nhận đúng đầu vào.
+- **Chiến thuật Grayscale**: Dù lọc màu quan trọng ban đầu, nhưng HOG chỉ cần Gradient cường độ để xác định hình dáng (tròn, tam giác, hình chữ nhật).
+
+## Phương pháp Sư phạm trong Tài liệu (Educational Documentation)
+- **Giải mã Hộp đen (Breaking the Black Box)**: Việc cung cấp các ví dụ số học thực tế (numerical examples) giúp người đọc nắm bắt bản chất thuật toán nhanh hơn rất nhiều so với chỉ đưa ra công thức trừu tượng.
+- **Minh họa từng bước**: Chia nhỏ quy trình (Gradient -> Magnitude -> Binning -> Normalization) kèm ví dụ cho từng bước giúp xây dựng niềm tin vào tính chính xác của hệ thống AI.
+
+## Tài liệu chuyên nghiệp (Standard Documentation)
+- **Tính Phổ quát (Universality)**: Tài liệu kỹ thuật tốt không nên quá phụ thuộc vào tên file nội bộ mà cần diễn đạt quy trình dưới dạng kiến thức chuẩn để người dùng khác có thể tham khảo cho các dự án tương tự.
+- **Tránh "Hộp đen" trong Siêu tham số**: Giải thích ý nghĩa vật lý/vận hành của các tham số trừu tượng (như C, Gamma) giúp người học hiểu được *tại sao* mô hình hoạt động hiệu quả thay vì chỉ biết *cách* chạy code.
+
+## Đánh giá Mô hình (Model Evaluation)
+- **Cân bằng Precision-Recall**: Trong bài toán phát hiện biển báo, Recall (độ phủ) thường quan trọng hơn một chút so với Precision để tránh bỏ sót các biển báo nguy hiểm. Tuy nhiên, Precision thấp sẽ gây ra quá nhiều "báo động giả" trên Dashboard.
+- **Vai trò của Confusion Matrix**: Đây là công cụ tốt nhất để phân tích "điểm yếu" của mô hình, từ đó tìm ra các mẫu Hard Negatives cần thu thập thêm.
+- **F1-Score**: Dùng làm chỉ số vàng (Golden metric) khi phải chọn lựa giữa các phiên đầu huấn luyện khác nhau.
+
+## Siêu tham số (Hyperparameters)
+- **Tầm quan trọng của C**: Một hằng số nhỏ ($C=1$) giúp mô hình linh hoạt hơn với nhiễu ảnh thực tế của GTSDB so với việc ép mô hình học thuộc lòng bằng $C$ quá lớn.
+- **RBF và Gamma**: Kernel rbf là lựa chọn tối ưu cho dữ liệu phi tuyến tính như HOG. Việc chọn đúng $\gamma$ giúp ranh giới quyết định (Decision Boundary) bao quát hơn, chống Overfitting hiệu quả.
+- **GridSearchCV**: Đây là công cụ khoa học nhất để tìm tham số, thay vì thử-sai (Trial & Error) cảm tính. Việc kết hợp Cross-Validation 5-folds đảm bảo tính ổn định của mô hình trên mọi góc nhìn.
+
+## Quản lý Module và Packages (Python Architecture)
+- **Tầm quan trọng của `__init__.py` (v4.0.1)**: Mặc dù Python 3 hỗ trợ Implicit Namespace Packages, nhưng trong các ứng dụng Web như Streamlit (có cơ chế Hot Reload), việc thiếu `__init__.py` có thể gây ra lỗi `KeyError: 'module.name'` do bộ nạp module làm mất vết package trong `sys.modules`. Luôn đảm bảo các thư mục `components`, `views`, `src` đều là các Package chính quy.
+- **Xử lý Import Error**: Khi gặp lỗi `KeyError` ngay tại dòng `from...import`, nguyên nhân thường nằm ở việc bộ nạp (Importer) bị xung đột bộ nhớ đệm. Giải pháp triệt để là chuẩn hóa cấu trúc Package và khởi tạo lại môi trường runtime.
