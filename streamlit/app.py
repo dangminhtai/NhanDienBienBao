@@ -6,6 +6,10 @@ from PIL import Image
 from components.ui_helpers import load_css
 from src.model_handler import load_hybrid_system
 from src.class_metadata import get_class_names
+from src.content_manager import get_ui
+
+# Khởi tạo Content Manager
+ui = get_ui()
 
 # Import Views
 from views.single_predict import render_single_predict_view
@@ -27,9 +31,9 @@ load_css(os.path.join(current_dir, 'assets', 'style.css'))
 
 def main():
     # Sidebar
-    st.sidebar.title("🚦 Hệ thống Nhận diện")
+    st.sidebar.title(ui.get("sidebar.title", "🚦 Hệ thống Nhận diện"))
     
-    app_mode = st.sidebar.radio("Chọn chế độ hoạt động:", 
+    app_mode = st.sidebar.radio(ui.get("sidebar.mode_selector", "Chọn chế độ hoạt động:"), 
                                 ["Dự đoán nhanh (Single Sign)", "Phát hiện & Nhận diện (Full Image)", "Phát hiện từ Video (Video Mode) - Beta", "Quét Thư mục (Batch Mode)"])
     
     st.sidebar.markdown("---")
@@ -72,13 +76,11 @@ def main():
     
     st.sidebar.markdown(f"""
         <div style="padding:10px; border:1px solid #eee; border-radius:10px">
-        <b>Phiên bản:</b> 4.0 (Hybrid)<br>
-        <b>Kiến trúc:</b> CNN + SVM Linear<br>
-        <b>Khoa học:</b> SOLID Refactored
+        {ui.get("sidebar.version_info")}
         </div>
     """, unsafe_allow_html=True)
 
-    st.title("🚦 Nhận diện Biển báo Giao thông")
+    st.title(ui.get("main_title", "🚦 Nhận diện Biển báo Giao thông"))
     
     # 1. Load Recognition Models (Dùng chung cho cả 3 chế độ)
     cnn_extractor, rec_scaler, svm_model = load_hybrid_system()

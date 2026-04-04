@@ -8,6 +8,9 @@ from PIL import Image, ImageDraw
 from src.data_processor import preprocess_image_for_cnn
 from src.model_handler import load_detection_system, predict_hybrid
 from src.detector import TrafficSignDetector
+from src.content_manager import get_ui
+
+ui = get_ui()
 from components.ui_helpers import draw_vietnamese_text
 
 @st.cache_resource
@@ -22,7 +25,7 @@ def render_full_image_view(image, class_names, current_dir, det_params, auto_tun
     if det_model is not None and det_scaler is not None:
         detector = get_cached_detector(current_dir)
         # --- TRỰC QUAN HÓA BƯỚC 1 (CLAHE) ---
-        st.write("### 📸 Bước 1: Mổ xẻ chi tiết Toán học từng lớp ảnh (CLAHE)")
+        st.write(f"### {ui.get('full_image_detect.step1_title', '📸 Bước 1')}")
         img_bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
         
         # Phẫu thuật 1: Chuyển hệ BGR sang LAB và rút lấy kênh Độ Sáng (Lightness)
@@ -48,7 +51,7 @@ def render_full_image_view(image, class_names, current_dir, det_params, auto_tun
         with col4:
             st.image(img_clahe_pil, caption="4. Trả lại mảng Màu (A,B)", use_container_width=True)
 
-        st.write("#### 📐 Toán học Lõi: Biến đổi Phân bố Tích lũy (CDF) và Giới hạn Kéo dãn")
+        st.write(ui.get("full_image_detect.step1_math", "#### 📐 Toán học Lõi"))
         
         # Bắt đầu vẽ Biểu đồ Histogram Real-time
         import matplotlib.pyplot as plt
@@ -87,7 +90,7 @@ Bằng thuật toán CLAHE lưới 8x8, máy sẽ tính **Hàm phân bố Tích 
         st.divider()
         
         # --- TRỰC QUAN HÓA BƯỚC 2 (HSV FILTERING) ---
-        st.write("### 📸 Bước 2: Chuyển đổi Không gian Màu (HSV) và Cắt Rập (Masking)")
+        st.write(f"### {ui.get('full_image_detect.step2_title', '📸 Bước 2')}")
         
         hsv = cv2.cvtColor(img_clahe_bgr, cv2.COLOR_BGR2HSV)
         min_s, min_v = det_params['min_s'], det_params['min_v']
@@ -136,7 +139,7 @@ Bằng thuật toán CLAHE lưới 8x8, máy sẽ tính **Hàm phân bố Tích 
         st.divider()
 
         # --- TRỰC QUAN HÓA BƯỚC 3 (MORPHOLOGY & CONTOURS) ---
-        st.write("### 📸 Bước 3: Nối hạt (Morphology) và Vẽ Phác thảo Ứng viên")
+        st.write(f"### {ui.get('full_image_detect.step3_title', '📸 Bước 3')}")
         
         kernel_close = np.ones((9,9), np.uint8)
         mask_closed = cv2.morphologyEx(mask_combined, cv2.MORPH_CLOSE, kernel_close)
@@ -168,11 +171,11 @@ Bằng thuật toán CLAHE lưới 8x8, máy sẽ tính **Hàm phân bố Tích 
         with c3_5:
             st.image(preview_contours_pil, caption="5. Trích xuất ứng viên", use_container_width=True)
             
-        st.info("Biển báo thường có chữ hoặc hình vẽ màu đen/trắng ở lõi, mô hình sẽ hiểu biển báo là mảnh vỡ li ti rời rạc. Do vậy cần vá lỗ hổng. Việc xóa nhiễu (tẩy hạt bụi) để tránh mô hình dự đoán sai.")
+        st.info(ui.get("full_image_detect.step3_desc", "Biển báo thường có chữ..."))
         st.divider()
 
         # --- TRỰC QUAN HÓA BƯỚC 4 (GEOMETRY FILTERING) ---
-        st.write("### 📸 Bước 4: Sát hạch Hình học (Geometry Filter)")
+        st.write(f"### {ui.get('full_image_detect.step4_title', '📸 Bước 4')}")
         
         geo_passed_img = img_clahe_bgr.copy()
         geo_rejected_img = img_clahe_bgr.copy()
@@ -210,7 +213,7 @@ Bằng thuật toán CLAHE lưới 8x8, máy sẽ tính **Hàm phân bố Tích 
         passed_rois = []
         if det_params['min_laplacian'] > 0:
             # --- TRỰC QUAN HÓA BƯỚC 5 (LAPLACIAN FOCUS FILTER) ---
-            st.write("### 📸 Bước 5: Sát hạch Độ nét (Laplacian Focus)")
+            st.write(f"### {ui.get('full_image_detect.step5_title', '📸 Bước 5')}")
             
             focus_passed_img = img_clahe_bgr.copy()
             focus_rejected_img = img_clahe_bgr.copy()

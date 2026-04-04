@@ -90,3 +90,13 @@
 
 22. **[UI005] Khám phá Phân bổ (Distribution Explorer):** 
     - Cho phép người chọn 1 Gene và xem biểu đồ phân bổ (Histogram) của 34.000 điểm dữ liệu mẫu của Gene đó, giúp thấy rõ tại sao Mean và Std lại có giá trị như vậy.
+93: 
+94: 29. **[UI011] Đa ngôn ngữ & Tùy biến Nội dung (I18n & CMS):**
+95:     - Tiếp tục hoàn thiện bộ gõ tiếng Việt trong `content.json` để đồng bộ toàn bộ Dashboard.
+96:     - Hỗ trợ anh thay đổi "văn phong" giải thích (từ Hàn lâm sang Phổ thông) chỉ bằng một nút gạt.
+97: 
+98: 30. **[PERF001] Đa luồng Video (Async Video Processing):**
+99:     - Triển khai kiến trúc Producer-Consumer bằng `Queue` và `threading` để tách biệt luồng đọc khung hình và luồng xử lý AI, giúp UI Streamlit đạt mượt mà 30fps.
+100: 
+101: 31. **[BATCH001] Xuất báo cáo CSV:**
+102:     - Thêm nút "Tải báo cáo kết quả (.csv)" sau khi quét xong thư mục ở Chế độ Batch.

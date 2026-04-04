@@ -6,13 +6,16 @@ from PIL import Image, ImageDraw
 from src.data_processor import preprocess_image_for_cnn
 from src.model_handler import load_detection_system, predict_hybrid
 from src.detector import TrafficSignDetector
+from src.content_manager import get_ui
+
+ui = get_ui()
 from components.ui_helpers import draw_vietnamese_text
 
 def render_batch_process_view(current_dir, cnn_extractor, rec_scaler, svm_model, class_names, det_params, auto_tune):
-    st.header("📂 Chế độ quét hàng loạt")
+    st.header(ui.get("batch_process.title", "📂 Quét Thư mục (Batch Mode)"))
     folder_path = st.text_input("Nhập đường dẫn thư mục ảnh:", value=r"f:\X-FILE\Code_UNI\Python\Math for AI\CuoiKy\NhanDienBienBao\Tests")
     
-    if st.button("🚀 BẮT ĐẦU QUÉT THƯ MỤC"):
+    if st.button(ui.get("batch_process.btn_start", "🚀 BẮT ĐẦU QUÉT THƯ MỤC")):
         if os.path.isdir(folder_path):
             from src.batch_processor import BatchProcessor
             

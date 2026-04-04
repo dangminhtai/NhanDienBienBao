@@ -8,19 +8,15 @@ from PIL import Image, ImageDraw
 from src.data_processor import preprocess_image_for_cnn
 from src.model_handler import load_detection_system, predict_hybrid
 from src.detector import TrafficSignDetector
+from src.content_manager import get_ui
+
+ui = get_ui()
 from components.ui_helpers import draw_vietnamese_text
 
 def render_video_detect_view(cnn_extractor, rec_scaler, svm_model, class_names, current_dir, det_params):
-    st.header("📽️ Phát hiện Biển báo từ Video (Beta)")
+    st.header(ui.get("video_detect.title", "🎥 Phát hiện từ Video (Video Mode) - Beta"))
     
-    st.info("""
-    **Hướng dẫn:** 
-    1. Chọn video từ thư mục có sẵn hoặc tải lên video mới (.mp4, .avi).
-    2. Điều chỉnh tham số **Frame Skip** (bỏ qua khung hình) để tăng tốc độ xử lý.
-    3. Nhấn **Bắt đầu xử lý** để xem kết quả real-time.
-    
-    *Lưu ý: Chế độ Video đang ở bản Beta. Do xử lý AI từng khung hình trên web nên tốc độ sẽ chậm hơn video gốc. Hãy tăng Frame Skip và giảm Resize Scale để mượt hơn.*
-    """)
+    st.info(ui.get("video_detect.intro", "Hướng dẫn: 1. Chọn video..."))
 
     # --- Sidebar bổ sung cho Video ---
     st.sidebar.markdown("---")

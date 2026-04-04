@@ -6,6 +6,7 @@ Dự án này triển khai một hệ thống AI tiên tiến kết hợp giữa
 - **Chế độ Dự đoán nhanh**: Tải lên ảnh biển báo đã cắt để nhận diện ngay lập tức với độ chính xác cao.
 - **Chế độ Phát hiện & Nhận diện**: Tự động tìm kiếm nhiều biển báo bên trong một bức ảnh phong cảnh (Toàn cảnh) và định danh từng biển báo.
 - **Chế độ Phát hiện từ Video**: Xử lý luồng video (.mp4) theo thời gian thực, tự động khoanh vùng và nhận diện biển báo khi xe đang di chuyển.
+- **Tùy biến Nội dung (CMS)**: Toàn bộ văn bản, tiêu đề và hướng dẫn trên giao diện được quản lý tập trung qua file JSON, giúp người dùng dễ dàng chỉnh sửa mà không cần can thiệp vào mã nguồn.
 - **Minh bạch Toán học**: Giải trình chi tiết quy trình trích xuất đặc trưng sâu (Deep Features) và cơ chế phân loại Maximum Margin của SVM.
 
 ## 🏗️ Kiến trúc Hệ thống (Hybrid v4.0)
@@ -41,6 +42,8 @@ streamlit run app.py
 - `streamlit/src/detector.py`: Logic phát hiện biển báo toàn cảnh.
 - `streamlit/src/model_handler.py`: Quản lý nạp và dự đoán mô hình.
 - `streamlit/models/`: Chứa các file mô hình `.h5` và `.pkl`.
+- `streamlit/config/content.json`: File cấu hình toàn bộ văn bản hiển thị trên UI.
+- `streamlit/src/content_manager.py`: Module quản lý nạp nội dung UI linh hoạt.
 - `docs/`: Tài liệu hướng dẫn, bài học kinh nghiệm và điểm yếu của hệ thống.
 
 ---

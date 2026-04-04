@@ -202,3 +202,9 @@
 ## Quản lý Module và Packages (Python Architecture)
 - **Tầm quan trọng của `__init__.py` (v4.0.1)**: Mặc dù Python 3 hỗ trợ Implicit Namespace Packages, nhưng trong các ứng dụng Web như Streamlit (có cơ chế Hot Reload), việc thiếu `__init__.py` có thể gây ra lỗi `KeyError: 'module.name'` do bộ nạp module làm mất vết package trong `sys.modules`. Luôn đảm bảo các thư mục `components`, `views`, `src` đều là các Package chính quy.
 - **Xử lý Import Error**: Khi gặp lỗi `KeyError` ngay tại dòng `from...import`, nguyên nhân thường nằm ở việc bộ nạp (Importer) bị xung đột bộ nhớ đệm. Giải pháp triệt để là chuẩn hóa cấu trúc Package và khởi tạo lại môi trường runtime.
+205: 
+206: ## Quản lý Nội dung Giao diện (UI Content Management)
+207: - **Tách biệt Dữ liệu và Giao diện (Decoupling)**: Việc đưa toàn bộ văn bản vào tệp `content.json` giúp ứng dụng trở nên linh hoạt tuyệt đối. Người dùng có thể thay đổi "văn phong" của AI (từ chuyên gia sang hướng dẫn cơ bản) mà không cần chạm vào logic Python.
+208: - **Cơ chế Fallback (Dự phòng)**: Trong thiết kế hệ thống i18n hoặc CMS, luôn cần một giá trị mặc định (`default_value`) trong hàm `get`. Điều này đảm bảo giao diện không bao giờ bị trống hoặc lỗi nếu thiếu key trong file cấu hình.
+209: - **Singleton Pattern cho Content Manager**: Việc dùng một instance duy nhất (Singleton) giúp tiết kiệm tài nguyên và đảm bảo tính nhất quán của ngôn ngữ trên toàn bộ Dashboard.
+210: - **Cải thiện độ chuyên nghiệp**: Văn bản được trau chuốt trong JSON giúp Dashboard giống một sản phẩm thương mại thực thụ hơn là một bản demo kỹ thuật.

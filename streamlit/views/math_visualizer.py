@@ -1,14 +1,13 @@
-import streamlit as st
+from src.content_manager import get_ui
+
+ui = get_ui()
 
 def render_math_section(app_mode):
     # --- PHẦN MINH BẠCH TOÁN HỌC ---
     st.divider()
-    with st.expander("📊 CƠ SỞ TOÁN HỌC VÀ QUY TRÌNH HỆ THỐNG"):
-        st.subheader("1. Kiến trúc Hybrid v4.0")
-        st.write("""
-        Hệ thống kết hợp **CNN** để trích xuất đặc trưng sâu (256 chiều) và **SVM** để phân loại. 
-        Đối với tác vụ phát hiện, chúng tôi sử dụng lọc màu **HSV** kết hợp với **SVM Binary** dựa trên đặc trưng **HOG**.
-        """)
+    with st.expander(ui.get("math_section.title", "📊 CƠ SỞ TOÁN HỌC VÀ QUY TRÌNH HỆ THỐNG")):
+        st.subheader(ui.get("math_section.hybrid_arch_title", "1. Kiến trúc Hybrid v4.0"))
+        st.write(ui.get("math_section.hybrid_arch_desc", "Hệ thống kết hợp CNN và SVM."))
 
         if app_mode in ["Phát hiện & Nhận diện (Full Image)", "Quét Thư mục (Batch Mode)"]:
             st.graphviz_chart("""

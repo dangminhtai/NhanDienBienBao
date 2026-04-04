@@ -3,6 +3,9 @@ import os
 import tensorflow as tf
 from src.data_processor import preprocess_image_for_cnn
 from src.model_handler import predict_hybrid, extract_all_fmaps
+from src.content_manager import get_ui
+
+ui = get_ui()
 
 # Import các tiểu mô-đun giải phẫu (SOLID Components)
 from components.anatomy.step1_pixel import render_step1_pixel_tracking
@@ -17,7 +20,7 @@ from components.anatomy.step4_svm import render_svm_classification
 
 def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_model, class_names, current_dir):
     """Render giao diện Dự đoán nhanh (Single Sign) - SOLID Edition."""
-    st.header("🔍 Chế độ Dự đoán nhanh (Single Sign)")
+    st.header(ui.get("single_predict.title", "🔍 Chế độ Dự đoán nhanh (Single Sign)"))
     
     # Khởi tạo session state để lưu kết quả (Tránh mất dữ liệu khi kéo Slider)
     if 'predict_results' not in st.session_state:
@@ -28,8 +31,8 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
         st.image(image, caption='Ảnh đã tải lên', use_container_width=True)
     
     # Nút bấm chính
-    if st.button("🔍 BẮT ĐẦU NHẬN DIỆN"):
-        with st.spinner('Đang phân tích chuyên sâu (Deep Tracking)...'):
+    if st.button(ui.get("single_predict.btn_start", "🔍 BẮT ĐẦU NHẬN DIỆN")):
+        with st.spinner(ui.get("single_predict.loading_msg", "Đang phân tích chuyên sâu...")):
             # 1. Dự đoán Hybrid & Trích xuất Feature Maps (Cache một lần duy nhất)
             img_batch = preprocess_image_for_cnn(image)
             prediction_id, confidence = predict_hybrid(img_batch, cnn_extractor, rec_scaler, svm_model)
@@ -69,14 +72,14 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
         # """, unsafe_allow_html=True)
         
         st.markdown("---")
-        st.markdown("### 🖼️ Giải Phẫu Trực Quan Hệ Thống")
+        st.markdown(f"### {ui.get('single_predict.anatomy_title', '🖼️ Giải Phẫu Trực Quan Hệ Thống')}")
         
         # --- BƯỚC 1: TIỀN XỬ LÝ (Tracking Pixel) ---
         render_step1_pixel_tracking(image, current_dir)
 
         # --- BƯỚC 2: X-QUANG CNN ---
         if fmaps_cache:
-            with st.expander("📌 Bước 2: X-Quang Hệ thần kinh CNN (Deep Tracking)", expanded=True):
+            with st.expander(ui.get("single_predict.step2_title", "📌 Bước 2: X-Quang Hệ thần kinh CNN (Deep Tracking)"), expanded=True):
                 # 2.0 & 2.1: Overview & Normalization
                 render_cnn_overview(raw_ndarray, current_dir)
                 
@@ -103,17 +106,17 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                 render_dense_juicer(cnn_extractor, fmaps_cache['flatten_out'], fmaps_cache['deep_features'])
                 
             # --- BƯỚC 3: CHUẨN HÓA (Standardization) ---
-            with st.expander("📌 Bước 3: Cân bằng Đặc trưng (Standardization)", expanded=False):
+            with st.expander(ui.get("single_predict.step3_title", "📌 Bước 3: Cân bằng Đặc trưng (Standardization)"), expanded=False):
                 # Nối tiếp từ CNN sang SVM
                 render_step3_standardization(fmaps_cache['deep_features'], rec_scaler, current_dir)
             
             # --- BƯỚC 4: RA QUYẾT ĐỊNH (Phân loại SVM) ---
-            with st.expander("📌 Bước 4: Ra quyết định (Phân loại SVM)", expanded=True):
+            with st.expander(ui.get("single_predict.step4_title", "📌 Bước 4: Ra quyết định (Phân loại SVM)"), expanded=True):
                 # Dữ liệu 256 đặc trưng đã chuẩn hóa đi vào bộ não phán quyết
                 scaled_features = rec_scaler.transform(fmaps_cache['deep_features'])
                 render_svm_classification(svm_model, scaled_features, class_names, prediction_id, current_dir)
         else:
-            st.warning("⚠️ Hệ thống vừa cập nhật tính năng Turbo Cache. Vui lòng nhấn nút **[🔍 BẮT ĐẦU NHẬN DIỆN]** phía trên một lần nữa để kích hoạt bộ nhớ đệm siêu tốc!")
+            st.warning(ui.get("single_predict.result_mismatch_warning", "⚠️ Vui lòng nhấn nút nhận diện lại."))
 
         # --- THÊM ẢNH META MINH HỌA ---
         meta_path = os.path.join(current_dir, "dataset", "Meta", f"{prediction_id}.png")
