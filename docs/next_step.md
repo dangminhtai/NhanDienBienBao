@@ -73,5 +73,8 @@
 24. **[UI006] So sánh Kernel Tương tác (Interactive Kernel Lab):** 
     - Cho phép người dùng tạm thời thay đổi Kernel (ví dụ từ Linear sang RBF) để xem ranh giới quyết định thay đổi thế nào trên cùng một tập dữ liệu, giúp hiểu sâu về sức mạnh của từng loại Kernel.
 
+25. **[UI007] Chế độ Phân loại Đối tượng (Audience Switch):** 
+    - Xây dựng một công tắc cho phép chuyển đổi giao diện giữa 'Người học' (Dùng ngôn ngữ sư phạm) và 'Lập trình viên' (Dùng ngôn ngữ kỹ thuật, show mã nguồn, file, dòng code) để tối ưu hóa trải nghiệm cho nhiều đối tượng khác nhau.
+
 22. **[UI005] Khám phá Phân bổ (Distribution Explorer):** 
     - Cho phép người chọn 1 Gene và xem biểu đồ phân bổ (Histogram) của 34.000 điểm dữ liệu mẫu của Gene đó, giúp thấy rõ tại sao Mean và Std lại có giá trị như vậy.

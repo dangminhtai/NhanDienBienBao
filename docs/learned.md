@@ -80,6 +80,10 @@
 - **Truy vết OVO (One-vs-One Trace)**: Trong các bài toán đa lớp, việc trích xuất đúng chỉ số cuộc đối đầu (Duel Index) từ ma trận `coef_` là chìa khóa để giải thích tại sao lớp này thắng lớp kia. Công thức tính index $i * (n - 1) - i * (i + 1) / 2 + j - 1$ giúp ánh xạ chính xác từ cặp lớp sang hàng trọng số tương ứng.
 - **Giá trị Đóng góp ($W \times X$)**: Thay vì chỉ hiển thị trọng số tĩnh $W$, việc nhân $W \times X$ (với $X$ là vector đặc trưng của ảnh hiện tại) giúp chỉ ra những "Nhân chứng" thực sự đang hoạt động cho riêng bức ảnh đó. Điều này biến một thuộc tính mô hình chung thành một lời giải thích cá nhân hóa (Local Explanation).
 
+## Phân tách Vai trò UI (Persona-driven UI)
+- **Developer vs End-User**: Khi xây dựng Dashboard trực quan, cần phân biệt rõ giữa "Debug Tool" (dành cho lập trình viên - show file, dòng code) và "Pedagogical Tool" (dành cho người học - show khái niệm, sơ đồ). Việc trộn lẫn hai vai trò này sẽ làm giảm tính chuyên môn của ứng dụng và gây bối rối cho người xem không có nền tảng kỹ thuật.
+- **Chia nhỏ Logic (Logical Sub-steps)**: Đối với các thuật toán phức tạp như SVM, việc chia nhỏ thành các tiểu bước (Tiếp nhận ➡️ Phân tích ➡️ Đối soát ➡️ Phán quyết) giúp tạo ra một "Câu chuyện Dữ liệu" (Data Storytelling) mạch lạc hơn là chỉ hiển thị một biểu đồ kết quả cuối cùng.
+
 ## Giải thích Tính thời điểm của Dữ liệu (Temporal Explanation)
 - **Train vs Inference**: Khi trực quan hóa các phép toán thống kê (như StandardScaler), việc làm rõ nguồn gốc của các tham số ($\mu, \sigma$) là cực kỳ quan trọng. Cần nhấn mạnh rằng chúng có nguồn gốc từ **Tập huấn luyện (Training Set)** chứ không phải tính toán tức thời trên dữ liệu mới. Điều này giúp người dùng hiểu rõ khái niệm "Tri thức đã học" (Learned Knowledge) trong AI.
 
