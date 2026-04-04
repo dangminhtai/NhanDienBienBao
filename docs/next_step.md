@@ -82,5 +82,8 @@
 27. **[UI009] Hoạt họa Bẻ cong Không gian (Space Bending Animation):** 
     - Phát triển một đoạn hoạt họa (GIF/Lottie) minh họa sống động quá trình các điểm dữ liệu từ 1D được 'nhấc bổng' lên 2D để SVM kẻ ranh giới, giúp tăng tính tương tác và dễ hiểu cho Bước 4.2.
 
+28. **[UI010] Cán cân Logic Tương tác (Interactive Logic Scale):** 
+    - Cho phép người dùng rê chuột vào từng thanh trên cán cân ở Bước 4.3 để xem vùng pixel tương ứng trong ảnh gốc đã đóng góp vào quyết định đó như thế nào (kết hợp với Integrated Gradients), giúp tạo ra sự kết nối trực quan tối đa.
+
 22. **[UI005] Khám phá Phân bổ (Distribution Explorer):** 
     - Cho phép người chọn 1 Gene và xem biểu đồ phân bổ (Histogram) của 34.000 điểm dữ liệu mẫu của Gene đó, giúp thấy rõ tại sao Mean và Std lại có giá trị như vậy.

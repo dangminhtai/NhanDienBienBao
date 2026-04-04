@@ -3,9 +3,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from sklearn.svm import SVC
 
 def render_svm_classification(svm_model, scaled_features, class_names, current_prediction_id, current_dir):
-    """Mổ xẻ Bước 4: Ra quyết định (Phân loại SVM) - Pedagogical Storytelling Edition."""
+    """Mổ xẻ Bước 4: Ra quyết định (Phân loại SVM) - Balance Scale Edition."""
     st.markdown("---")
     st.header("🧠 Bước 4: Ra quyết định (Phân loại SVM)")
     
@@ -21,103 +22,31 @@ def render_svm_classification(svm_model, scaled_features, class_names, current_p
         with open(step4_path, "r", encoding="utf-8") as f:
             st.markdown(f.read())
 
+    # Lấy thông tin Top 1 & Top 2 để phục vụ trực quan hóa động
+    top_5_names, top_5_probs, top_5_indices = _get_top_predictions(svm_model, scaled_features, class_names, current_prediction_id)
+
     # --- TIỂU BƯỚC 4.1: TIẾP NHẬN ĐẶC TRƯNG ---
-    st.subheader("4.1. Tiếp nhận 256 Mã Gene")
-    st.markdown("CNN đã nén ảnh thành 256 đặc trưng (Gene). SVM sẽ dùng bộ mã này làm 'tọa độ' để tìm vị trí biển báo trên bản đồ tri thức.")
+    st.subheader("4.1. Bước đệm: Tiếp nhận hồ sơ 256 chiều")
+    st.markdown("""
+    Sau khi được CNN mổ xẻ và chuẩn hóa, ảnh của anh giờ đây là một bộ mã gồm 256 số thực. 
+    Mỗi con số này là một 'đặc điểm nhận dạng' cực kỳ tinh vi.
+    """)
+    with st.expander("🔍 Xem hồ sơ định danh (256 Mã Gene)", expanded=False):
+        st.write(scaled_features)
 
-    # --- TIỂU BƯỚC 4.2: PHÉP MÀU KERNEL (THE KERNEL TRICK STORY) ---
-    st.subheader("4.2. Phép màu Kernel: Biến cái không thể thành có thể")
-    
-    with st.expander("🤔 Tại sao chúng ta cần Kernel? (Bấm để xem giải mã)", expanded=True):
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("**Vấn đề: Thế giới 1 chiều bế tắc**")
-            st.markdown("Hãy tưởng tượng các biển báo nằm xen kẽ trên một sợi dây. Không có một 'nhát cắt' thẳng nào có thể tách riêng màu Đỏ ra khỏi màu Xanh.")
-            _plot_1d_problem()
-            
-        with col2:
-            st.markdown("**Giải pháp: Nhấc bổng không gian (Lifting)**")
-            st.markdown("SVM 'bẻ cong' sợi dây thành hình chữ U trong không gian 2 chiều. Lúc này, chỉ cần một nhát cắt ngang phẳng là chia đôi được chúng!")
-            _plot_2d_lifting()
-        
-        st.success("💡 **Bản chất:** Kernel giúp SVM 'nhìn' thấy các chiều không gian cao hơn (như 256 chiều của bạn) nơi mà các biển báo vốn dĩ đã được tách biệt rõ ràng.")
+    # --- TIỂU BƯỚC 4.2: PHÉP MÀU KERNEL (THE STORY) ---
+    st.subheader("4.2. Cơ chế Phán quyết (Kernel Logic)")
+    _render_kernel_story(svm_model, scaled_features, top_5_indices)
 
-    # --- TIỂU BƯỚC 4.3: PHÒNG THÍ NGHIỆM 4 LOẠI KERNEL ---
-    st.subheader("4.3. Bốn 'Triết lý' Phán quyết")
-    st.markdown("Mỗi loại Kernel có một 'tính cách' khác nhau khi kẻ đường biên:")
-    _render_kernel_gallery(svm_model, scaled_features)
+    # --- TIỂU BƯỚC 4.3: HỘI ĐỒNG CHỨNG CỨ & CÁN CÂN LOGIC ---
+    st.subheader("4.3. Hội đồng Chứng cứ & Cán cân Logic")
+    _render_balance_scale_logic(svm_model, scaled_features, top_5_indices, top_5_names)
 
-    # --- TIỂU BƯỚC 4.4: HỘI ĐỒNG CHỨNG CỨ & PHÁN QUYẾT ---
-    st.subheader("4.4. Hội đồng Chứng cứ & Phán quyết Cuối cùng")
-    top_5_names, top_5_probs, top_5_indices = _get_predictions(svm_model, scaled_features, class_names, current_prediction_id)
-    _render_duel_and_result(svm_model, scaled_features, top_5_indices, top_5_names, top_5_probs)
+    # --- TIỂU BƯỚC 4.4: PHÁN QUYẾT CUỐI CÙNG ---
+    st.subheader("4.4. Phán quyết Cuối cùng")
+    _render_final_verdict(top_5_names, top_5_probs)
 
-def _plot_1d_problem():
-    """Vẽ minh họa 1D không thể phân tách."""
-    x = np.array([-2, -1, 0, 1, 2])
-    colors = ['green', 'green', 'red', 'green', 'green']
-    fig, ax = plt.subplots(figsize=(5, 2))
-    ax.scatter(x, np.zeros_like(x), c=colors, s=100, edgecolors='black')
-    ax.axhline(0, color='black', linewidth=0.5)
-    ax.set_yticks([])
-    ax.set_title("1D: Bế tắc (Inseparable)")
-    st.pyplot(fig)
-
-def _plot_2d_lifting():
-    """Vẽ minh họa 2D sau khi dùng Kernel Trick (y = x^2)."""
-    x = np.array([-2, -1, 0, 1, 2])
-    y = x**2
-    colors = ['green', 'green', 'red', 'green', 'green']
-    fig, ax = plt.subplots(figsize=(5, 2))
-    ax.scatter(x, y, c=colors, s=100, edgecolors='black')
-    # Nhát cắt ngăn cách
-    ax.axhline(0.5, color='blue', linestyle='--', label='Nhát cắt SVM')
-    ax.set_title("2D: Phép màu (Separable!)")
-    st.pyplot(fig)
-
-def _render_kernel_gallery(svm_model, scaled_features):
-    """Trực quan hóa 4 loại Kernel với ẩn dụ dễ hiểu."""
-    formulas = {
-        'linear': r"x^T x'",
-        'rbf': r"\exp(-\gamma \|x - x'\|^2)",
-        'poly': r"(\gamma x^T x' + r)^d",
-        'sigmoid': r"\tanh(\gamma x^T x' + r)"
-    }
-    active_k = getattr(svm_model, 'kernel', 'linear')
-    
-    cols = st.columns(4)
-    titles = ["Linear", "RBF", "Poly", "Sigmoid"]
-    metaphors = ["Cây thước thẳng", "Vùng lan tỏa", "Đường uốn lượn", "Nơ-ron ảo"]
-    
-    # Giả lập tọa độ từ 256D (Lấy 2 Gene mạnh nhất để 'nhảy' theo ảnh)
-    x_star = scaled_features[0, 6] 
-    y_star = scaled_features[0, 200]
-    
-    xx, yy = np.meshgrid(np.linspace(-3, 3, 30), np.linspace(-3, 3, 30))
-    grid = np.c_[xx.ravel(), yy.ravel()]
-
-    for i, (k, title, meta) in enumerate(zip(['linear', 'rbf', 'poly', 'sigmoid'], titles, metaphors)):
-        with cols[i]:
-            st.markdown(f"**{title}**")
-            st.caption(f"*{meta}*")
-            
-            fig, ax = plt.subplots(figsize=(3, 3))
-            if k == 'linear': Z = grid[:, 0] + grid[:, 1]
-            elif k == 'rbf': Z = np.exp(-(grid[:, 0]**2 + grid[:, 1]**2)/2) - 0.5
-            elif k == 'poly': Z = (grid[:, 0]**3 + grid[:, 1]**2) - 1
-            else: Z = np.tanh(grid[:, 0] + grid[:, 1])
-            
-            ax.contourf(xx, yy, Z.reshape(xx.shape), cmap='RdYlGn', alpha=0.3)
-            ax.scatter(x_star, y_star, c='red', marker='*', s=100, edgecolors='black')
-            ax.set_xticks([]); ax.set_yticks([])
-            st.pyplot(fig)
-            st.latex(formulas[k])
-            
-            if k == active_k:
-                st.success("💎 QUÁN QUÂN")
-
-def _get_predictions(svm_model, scaled_features, class_names, current_id):
+def _get_top_predictions(svm_model, scaled_features, class_names, current_id):
     """Tính toán logic nội bộ SVM."""
     try:
         if hasattr(svm_model, 'predict_proba'):
@@ -127,32 +56,104 @@ def _get_predictions(svm_model, scaled_features, class_names, current_id):
             exp_s = np.exp(scores - np.max(scores))
             probs = exp_s / exp_s.sum()
         top_indices = np.argsort(probs)[-5:][::-1]
-        return [class_names.get(i, f"L{i}") for i in top_indices], probs[top_indices], top_indices
+        probs_top = probs[top_indices]
+        names_top = [class_names.get(idx, f"Label {idx}") for idx in top_indices]
+        return names_top, probs_top, top_indices
     except:
         return [class_names.get(current_id, "Unknown")], [1.0], [current_id]
 
-def _render_duel_and_result(svm_model, scaled_features, top_indices, top_names, top_probs):
-    """Phần 4.4: Duel và Kết quả."""
-    if len(top_indices) >= 2 and getattr(svm_model, 'kernel', '') == 'linear' and hasattr(svm_model, 'coef_'):
-        st.markdown(f"**🔎 Phân tích chứng cứ:** Tại sao chọn '{top_names[0]}' thay vì '{top_names[1]}'?")
-        i, j = sorted([top_indices[0], top_indices[1]])
-        n_classes = len(svm_model.classes_)
-        duel_idx = int(i * (n_classes - 1) - i * (i + 1) / 2 + j - 1)
-        weights = svm_model.coef_[duel_idx]
-        contrib = (weights * scaled_features.flatten()) * (1 if i == top_indices[0] else -1)
-        
-        top_10 = np.argsort(np.abs(contrib))[-10:]
-        fig, ax = plt.subplots(figsize=(10, 3))
-        ax.bar([f"Gene #{idx}" for idx in top_10], contrib[top_10], color=['green' if v > 0 else 'red' for v in contrib[top_10]])
-        ax.axhline(0, color='black', linewidth=0.8)
-        st.pyplot(fig)
-        st.caption("Cột xanh ủng hộ kết quả hiện tại. Cột đỏ ủng hộ phương án dự phòng.")
+def _render_kernel_story(svm_model, scaled_features, top_5_indices):
+    """Câu chuyện bẻ cong không gian."""
+    with st.expander("💡 Tại sao chúng ta cần Kernel? (Bấm để xem sự ảo diệu)", expanded=False):
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("**Trạng thái 1D: Bế tắc**")
+            st.caption("Các điểm xanh đỏ nằm lẫn lộn, không thể chia đôi bằng một đường thẳng phẳng.")
+            _plot_1d()
+        with c2:
+            st.markdown("**Sau khi dùng Kernel: Nhấc bổng**")
+            st.caption("Không gian được uốn cong, ranh giới (đường xanh) hiện ra cực kỳ rõ ràng.")
+            _plot_2d()
+        st.success("Mô hình của anh sử dụng bộ mã 256 chiều, nơi mọi ranh giới đều được tách biệt rõ ràng nhờ phép màu Kernel.")
 
-    c1, c2 = st.columns([0.6, 0.4])
-    with c1:
-        fig, ax = plt.subplots(figsize=(8, 3))
-        ax.barh(top_names, top_probs*100, color='#28a745')
+def _render_balance_scale_logic(svm_model, scaled_features, top_indices, top_names):
+    """Trực quan hóa Cán cân Logic giữa Top 1 và Top 2."""
+    if len(top_indices) < 2 or getattr(svm_model, 'kernel', '') != 'linear' or not hasattr(svm_model, 'coef_'):
+        st.info("ℹ️ Chế độ 'Cán cân Logic' hiện chỉ khả dụng cho mô hình Linear SVM.")
+        return
+
+    st.markdown(f"**Cuộc tranh luận giữa:** '{top_names[0]}' (Xanh) và '{top_names[1]}' (Đỏ)")
+    
+    # 1. Tính toán Contribution
+    i, j = sorted([top_indices[0], top_indices[1]])
+    n_classes = len(svm_model.classes_)
+    duel_idx = int(i * (n_classes - 1) - i * (i + 1) / 2 + j - 1)
+    
+    weights = svm_model.coef_[duel_idx]
+    x = scaled_features.flatten()
+    contrib = weights * x
+    if i != top_indices[0]: contrib = -contrib # Luôn để Top 1 là dương
+    
+    # 2. Lấy Top 5 tích cực và Top 5 tiêu cực
+    idx_sorted = np.argsort(contrib)
+    worst_5 = idx_sorted[:5] # Ủng hộ nhãn kia (Red)
+    best_5 = idx_sorted[-5:] # Ủng hộ nhãn hiện tại (Green)
+    
+    all_selected = np.concatenate([worst_5, best_5])
+    all_vals = contrib[all_selected]
+    all_labels = [f"Yếu tố #{idx}" for idx in all_selected]
+    
+    # 3. Vẽ Cán cân Ngang (Horizontal Balance)
+    fig, ax = plt.subplots(figsize=(10, 5))
+    colors = ['#dc3545' if v < 0 else '#28a745' for v in all_vals]
+    ax.barh(all_labels, all_vals, color=colors)
+    ax.axvline(0, color='black', linewidth=1.2)
+    ax.set_title("Cán cân Logic: Những yếu tố đang 'kéo' kết quả", fontsize=12)
+    ax.set_xlabel("Mức độ thuyết phục (Sức kéo của Gene)")
+    st.pyplot(fig)
+    
+    # 4. Hội thoại Nhân chứng (Dialogue Analysis)
+    st.markdown("**🎙️ Lời khai của các nhân chứng (TOP CHỨNG CỨ):**")
+    col_pro, col_con = st.columns(2)
+    with col_pro:
+        st.markdown("<h4 style='color:green;'>👍 Phe ủng hộ (Pro)</h4>", unsafe_allow_html=True)
+        st.write(f"• **Yếu tố #{best_5[-1]}**: 'Tôi thấy các đường nét này cực kỳ giống biển {top_names[0]}!' (Đóng góp mạnh nhất)")
+        st.write(f"• **Yếu tố #{best_5[-2]}**: 'Màu sắc và hình khối hoàn toàn trùng khớp.'")
+    with col_con:
+        st.markdown("<h4 style='color:red;'>👎 Phe phản đối (Con)</h4>", unsafe_allow_html=True)
+        st.write(f"• **Yếu tố #{worst_5[0]}**: 'Nhưng vết mờ này cũng hơi giống biển {top_names[1]} đó nha!'")
+        st.write(f"• **Yếu tố #{worst_5[1]}**: 'Cần cẩn thận vì góc cạnh này dễ gây nhầm lẫn.'")
+
+def _render_final_verdict(top_names, top_probs):
+    """Thiết kế lại Thẻ pháng quyết Premium."""
+    st.markdown("---")
+    res_col, bar_col = st.columns([0.4, 0.6])
+    
+    with res_col:
+        st.markdown(f"""
+        <div style="border: 2px solid #28a745; padding: 20px; border-radius: 10px; background-color: #f8fff9;">
+            <h2 style="color: #28a745; margin-top: 0;">🏆 PHÁN QUYẾT</h2>
+            <p style="font-size: 1.2em;">Sau khi cân soát mọi chứng cứ, AI kết luận đây là:</p>
+            <h1 style="color: #155724; font-size: 2.5em; text-transform: uppercase;">{top_names[0]}</h1>
+            <hr>
+            <p style="font-weight: bold; font-size: 1.1em;">Độ tin cậy: {top_probs[0]*100:.2f}%</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with bar_col:
+        st.markdown("#### Bảng xếp hạng Độ tin cậy (Top 5)")
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.barh(top_names[:5], top_probs[:5] * 100, color=['#28a745'] + ['#6c757d']*4)
         ax.invert_yaxis()
+        ax.set_xlabel("Xác suất (%)")
         st.pyplot(fig)
-    with c2:
-        st.success(f"🏆 Dự đoán: **{top_names[0]}**\n\nTin cậy: **{top_probs[0]*100:.2f}%**")
+
+def _plot_1d():
+    x = np.array([-2, -1, 0, 1, 2]); c = ['green', 'green', 'red', 'green', 'green']
+    f, a = plt.subplots(figsize=(4, 1.5)); a.scatter(x, [0]*5, c=c, s=100); a.axhline(0, color='gray')
+    a.set_yticks([]); st.pyplot(f)
+
+def _plot_2d():
+    x = np.array([-2, -1, 0, 1, 2]); y = x**2; c = ['green', 'green', 'red', 'green', 'green']
+    f, a = plt.subplots(figsize=(4, 1.5)); a.scatter(x, y, c=c, s=100); a.axhline(0.5, color='blue', ls='--')
+    st.pyplot(f)

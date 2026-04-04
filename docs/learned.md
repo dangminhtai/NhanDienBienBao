@@ -93,6 +93,10 @@
 - **Ẩn dụ "Nhấc bổng" (Lifting Metaphor)**: Đối với các khái niệm khó như Kernel Trick, việc sử dụng hình ảnh 1D (bế tắc) so sánh với 2D (giải quyết) là cách hiệu quả nhất để người dùng nắm bắt bản chất mà không cần hiểu toán học phức tạp. 
 - **Nhân hóa Thuật toán (Kernel Personas)**: Việc đặt tên cho các Kernel bằng những hình ảnh quen thuộc (Cây thước, Vùng phát sóng, Đường uốn lượn) giúp tạo ra các neo tư duy (Mental Models) bền vững cho người học.
 
+## Kỹ thuật Cán cân Logic (The Balance Scale Technique)
+- **Trực quan hóa Đối trọng (Horizontal Balance)**: Thay vì dùng biểu đồ cột đứng (thường gây cảm giác khô khan và rời rạc), việc sử dụng trục ngang với điểm 0 ở giữa giúp người dùng hình dung rõ ràng sự "giằng co" (Competition) giữa các lớp. Đây là cách trực quan hóa xác thực nhất cho chiến lược One-Vs-One của SVM.
+- **Hội thoại hóa Dữ liệu (Data Dialogue)**: Việc gán "lời nói" cho các con số (ví dụ: Nhân chứng #X nói...) giúp biến các phép toán khô khan trở thành một cuộc tranh biện logic dễ hiểu, giúp người dùng nắm bắt được 'Tại sao' chứ không chỉ là 'Cái gì'.
+
 ## Giải thích Tính thời điểm của Dữ liệu (Temporal Explanation)
 - **Train vs Inference**: Khi trực quan hóa các phép toán thống kê (như StandardScaler), việc làm rõ nguồn gốc của các tham số ($\mu, \sigma$) là cực kỳ quan trọng. Cần nhấn mạnh rằng chúng có nguồn gốc từ **Tập huấn luyện (Training Set)** chứ không phải tính toán tức thời trên dữ liệu mới. Điều này giúp người dùng hiểu rõ khái niệm "Tri thức đã học" (Learned Knowledge) trong AI.
 
