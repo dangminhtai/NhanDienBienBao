@@ -70,5 +70,8 @@
 23. **[AI007] Hiệu chuẩn Thống kê (Platt Scaling):** 
     - Nghiên cứu tích hợp phương pháp Platt Scaling để chuyển đổi điểm số `decision_function` của SVM thành xác suất thực tế một cách chuẩn xác hơn so với hàm Softmax đơn giản, tăng độ tin cậy cho biểu đồ phân tích Step 4.
 
+24. **[UI006] So sánh Kernel Tương tác (Interactive Kernel Lab):** 
+    - Cho phép người dùng tạm thời thay đổi Kernel (ví dụ từ Linear sang RBF) để xem ranh giới quyết định thay đổi thế nào trên cùng một tập dữ liệu, giúp hiểu sâu về sức mạnh của từng loại Kernel.
+
 22. **[UI005] Khám phá Phân bổ (Distribution Explorer):** 
     - Cho phép người chọn 1 Gene và xem biểu đồ phân bổ (Histogram) của 34.000 điểm dữ liệu mẫu của Gene đó, giúp thấy rõ tại sao Mean và Std lại có giá trị như vậy.

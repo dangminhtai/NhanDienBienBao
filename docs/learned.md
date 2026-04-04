@@ -76,6 +76,10 @@
 - **Tính năng không bắt buộc (Optional Features)**: Khi làm việc với các thư viện như Scikit-Learn, không phải model nào cũng hỗ trợ tất cả các phương thức (ví dụ: `predict_proba` chỉ có khi bật `probability=True`). Cần luôn có cơ chế kiểm tra `hasattr` và giải pháp dự phòng (Fallback) như dùng `decision_function` kết hợp với `Softmax` để đảm bảo UI không bị crash.
 - **Khởi tạo Biến cục bộ**: Luôn khởi tạo các biến quan trọng với giá trị mặc định ở đầu hàm để tránh lỗi `UnboundLocalError` khi logic rẽ nhánh hoặc gặp ngoại lệ.
 
+## Giải mã Phán quyết SVM (SVM Decision Transparency)
+- **Truy vết OVO (One-vs-One Trace)**: Trong các bài toán đa lớp, việc trích xuất đúng chỉ số cuộc đối đầu (Duel Index) từ ma trận `coef_` là chìa khóa để giải thích tại sao lớp này thắng lớp kia. Công thức tính index $i * (n - 1) - i * (i + 1) / 2 + j - 1$ giúp ánh xạ chính xác từ cặp lớp sang hàng trọng số tương ứng.
+- **Giá trị Đóng góp ($W \times X$)**: Thay vì chỉ hiển thị trọng số tĩnh $W$, việc nhân $W \times X$ (với $X$ là vector đặc trưng của ảnh hiện tại) giúp chỉ ra những "Nhân chứng" thực sự đang hoạt động cho riêng bức ảnh đó. Điều này biến một thuộc tính mô hình chung thành một lời giải thích cá nhân hóa (Local Explanation).
+
 ## Giải thích Tính thời điểm của Dữ liệu (Temporal Explanation)
 - **Train vs Inference**: Khi trực quan hóa các phép toán thống kê (như StandardScaler), việc làm rõ nguồn gốc của các tham số ($\mu, \sigma$) là cực kỳ quan trọng. Cần nhấn mạnh rằng chúng có nguồn gốc từ **Tập huấn luyện (Training Set)** chứ không phải tính toán tức thời trên dữ liệu mới. Điều này giúp người dùng hiểu rõ khái niệm "Tri thức đã học" (Learned Knowledge) trong AI.
 
