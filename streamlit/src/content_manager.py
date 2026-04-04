@@ -1,5 +1,18 @@
 import json
 import os
+import streamlit as st
+
+@st.cache_data(show_spinner=False)
+def load_json_content(config_path):
+    """Nạp nội dung từ file JSON (có cache và tự động reload khi file thay đổi)."""
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            st.error(f"Lỗi khi đọc file content.json: {e}")
+            return {}
+    return {}
 
 class UIContent:
     def __init__(self, config_path=None):
@@ -9,29 +22,15 @@ class UIContent:
             config_path = os.path.join(base_dir, "config", "content.json")
         
         self.config_path = config_path
-        self.content = {}
-        self.load()
-
-    def load(self):
-        """Nạp nội dung từ file JSON."""
-        if os.path.exists(self.config_path):
-            try:
-                with open(self.config_path, "r", encoding="utf-8") as f:
-                    self.content = json.load(f)
-            except Exception as e:
-                print(f"Lỗi khi đọc file content.json: {e}")
-                self.content = {}
-        else:
-            print(f"Không tìm thấy file cấu hình tại: {self.config_path}")
-            self.content = {}
 
     def get(self, key_path, default=""):
         """
         Lấy giá trị từ key path (ví dụ: 'single_predict.title').
-        Nếu không thấy, trả về giá trị mặc định.
+        Sử dụng content đã được cache bởi Streamlit.
         """
+        content = load_json_content(self.config_path)
         keys = key_path.split('.')
-        value = self.content
+        value = content
         for key in keys:
             if isinstance(value, dict) and key in value:
                 value = value[key]
@@ -39,11 +38,6 @@ class UIContent:
                 return default
         return value
 
-# Singleton instance để dùng chung toàn app
-_ui_instance = None
-
 def get_ui():
-    global _ui_instance
-    if _ui_instance is None:
-        _ui_instance = UIContent()
-    return _ui_instance
+    """Trả về instance của UIContent."""
+    return UIContent()

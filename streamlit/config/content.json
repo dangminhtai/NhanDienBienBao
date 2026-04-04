@@ -6,8 +6,8 @@
     },
     "main_title": "🚦 Nhận diện Biển báo Giao thông",
     "math_section": {
-        "title": "📊 CƠ SỞ TOÁN HỌC VÀ QUY TRÌNH HỆ THỐNG",
-        "hybrid_arch_title": "1. Kiến trúc Hybrid v4.0",
+        "title": "SƠ ĐỒ HỆ THỐNG",
+        "hybrid_arch_title": "CNN + SVM",
         "hybrid_arch_desc": "Hệ thống kết hợp **CNN** để trích xuất đặc trưng sâu (256 chiều) và **SVM** để phân loại. Đối với tác vụ phát hiện, chúng tôi sử dụng lọc màu **HSV** kết hợp với **SVM Binary** dựa trên đặc trưng **HOG**."
     },
     "single_predict": {

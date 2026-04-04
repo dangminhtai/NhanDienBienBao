@@ -11,6 +11,8 @@ Dưới đây là danh sách các lỗi kỹ thuật phát hiện được trong
 | ISSUE#005 | Video Upload Limit | Mặc định Streamlit giới hạn upload 200MB, gây lỗi khi tải video clip dài. | ✅ Đã Fix |
 | ISSUE#006 | Video Directory Mismatch | Đường dẫn thư mục videos bị lặp lại 'streamlit/streamlit/videos'. | ✅ Đã Fix |
 | ISSUE#008 | Video Mode UI Missing | Giao diện Video không hiện ra do tham số check app_mode bị lệch tên (đã thêm - Beta). | ✅ Đã Fix |
+| ISSUE#009 | NameError 'st' | Thiếu import streamlit as st trong math_visualizer.py sau khi refactor. | ✅ Đã Fix |
+| ISSUE#010 | CMS Hot Reload | File content.json thay đổi nhưng UI không cập nhật do Singleton cache. | ✅ Đã Fix |
 
 ---
 *Ghi chú: Issue #008 sửa lại string comparison trong app.py.*
