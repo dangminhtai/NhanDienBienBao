@@ -100,13 +100,31 @@ def extract_all_fmaps(cnn_extractor, image_batch):
         layers_to_extract.append(conv2.output)
         layer_names.append("fmaps2")
         
-        # 3. Lớp MaxPooling đầu tiên
+        # 3. Lớp Conv2D tiếp theo (Khối 2)
+        conv3 = [l for l in cnn_extractor.layers if "conv2d" in l.name.lower()][2]
+        layers_to_extract.append(conv3.output)
+        layer_names.append("fmaps3")
+        
+        conv4 = [l for l in cnn_extractor.layers if "conv2d" in l.name.lower()][3]
+        layers_to_extract.append(conv4.output)
+        layer_names.append("fmaps4")
+        
+        # 4. Lớp MaxPooling đầu tiên (14x14)
         pool1 = [l for l in cnn_extractor.layers if "pool" in l.name.lower()][0]
         layers_to_extract.append(pool1.output)
         layer_names.append("pool1_out")
         
-        # 4. Lớp Dense cuối cùng (Bộ trích xuất 256 đặc trưng)
-        # Thông thường là lớp cuối cùng của extractor này
+        # 5. Lớp MaxPooling thứ hai (5x5)
+        pool2 = [l for l in cnn_extractor.layers if "pool" in l.name.lower()][1]
+        layers_to_extract.append(pool2.output)
+        layer_names.append("pool2_out")
+        
+        # 6. Lớp Flatten (Duỗi thẳng về 1.600)
+        flatten_layer = [l for l in cnn_extractor.layers if "flatten" in l.name.lower()][0]
+        layers_to_extract.append(flatten_layer.output)
+        layer_names.append("flatten_out")
+        
+        # 7. Lớp Dense đặc trưng (256 Mã Gene)
         dense_out = cnn_extractor.layers[-1].output
         layers_to_extract.append(dense_out)
         layer_names.append("deep_features")

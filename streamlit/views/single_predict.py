@@ -9,6 +9,8 @@ from components.anatomy.step1_pixel import render_step1_pixel_tracking
 from components.anatomy.step2_cnn_overview import render_cnn_overview
 from components.anatomy.step2_conv_layers import render_conv1_layer, render_relu_activation, render_conv2_layer
 from components.anatomy.step2_pooling import render_pooling_layer
+from components.anatomy.step2_dropout import render_dropout_layer
+from components.anatomy.step2_block_2 import render_block2_quickview
 from components.anatomy.step2_juicer import render_dense_juicer
 
 def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_model, class_names, current_dir):
@@ -88,8 +90,15 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                 # 2.1.5: MaxPooling (Dùng fmaps2 và pool1_out từ Cache)
                 render_pooling_layer(cnn_extractor, img_batch, fmaps_cache['fmaps2'], fmaps_cache['pool1_out'])
                 
-                # 2.3: Feature Juicer (Dùng deep_features từ Cache)
-                render_dense_juicer(fmaps_cache['deep_features'])
+                # 2.1.6: Dropout Simulation (Dùng pool1_out)
+                render_dropout_layer(fmaps_cache['pool1_out'])
+                
+                # 2.2: Khối Conv 2 (Trung cấp - Quick View)
+                # Dùng fmaps3, fmaps4 và pool2_out từ Cache
+                render_block2_quickview(fmaps_cache['fmaps3'], fmaps_cache['fmaps4'], fmaps_cache['pool2_out'])
+                
+                # 2.3: Feature Juicer (Flatten 1.600 -> Dense 256)
+                render_dense_juicer(cnn_extractor, fmaps_cache['flatten_out'], fmaps_cache['deep_features'])
         else:
             st.warning("⚠️ Hệ thống vừa cập nhật tính năng Turbo Cache. Vui lòng nhấn nút **[🔍 BẮT ĐẦU NHẬN DIỆN]** phía trên một lần nữa để kích hoạt bộ nhớ đệm siêu tốc!")
 

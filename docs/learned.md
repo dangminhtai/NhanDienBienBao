@@ -48,7 +48,101 @@
 
 ## Phương pháp Sư phạm trong Tài liệu (Educational Documentation)
 - **Giải mã Hộp đen (Breaking the Black Box)**: Việc cung cấp các ví dụ số học thực tế (numerical examples) giúp người đọc nắm bắt bản chất thuật toán nhanh hơn rất nhiều so với chỉ đưa ra công thức trừu tượng.
-- **Minh họa từng bước**: Chia nhỏ quy trình (Gradient -> Magnitude -> Binning -> Normalization) kèm ví dụ cho từng bước giúp xây dựng niềm tin vào tính chính xác của hệ thống AI.
+- **Minh họa từng bước**: Chia nhỏ quy trình (Gradient -> Magnitude -> Binning -> Normalization) kèm ví dụ cho từng bước giúp xây dựng niềm tin tại tính chính xác của hệ thống AI.
+
+## Phân cấp Hiển thị trong Giải phẫu AI (UI Hierarchy)
+- **Cân bằng giữa Chi tiết và Tóm tắt**: Đối với các phần lặp lại của thuật toán (như Conv Block 2), việc sử dụng chế độ "Trực quan nhanh" (Quick View) giúp người dùng nắm bắt được sự thay đổi của dữ liệu (từ 14x14 xuống 5x5) mà không bị choáng ngợp bởi các phép toán lặp lại. Điều này giúp duy trì nhịp độ trải nghiệm (UX flow) của ứng dụng.
+- **Tối ưu hóa Trích xuất (Feature Map Extraction)**: Việc sử dụng một mô hình Multi-output trong Keras để trích xuất toàn bộ Feature Maps trong một lần `predict` duy nhất giúp tăng hiệu năng đáng kể so với việc chạy `predict` cho từng lớp riêng lẻ.
+
+## Giải mã Phép nén Dữ liệu (Dense Layer Explainability)
+- **Truy xuất Trọng số (Weight Introspection)**: Việc chỉ hiển thị kết quả đầu ra là chưa đủ để giải thích "Hộp đen". Cần phải truy xuất trực tiếp các trọng số (Weights) của lớp Dense để cho người dùng thấy cơ chế "Weighted Sum" (Tổng có trọng số). Mỗi đầu ra (Gene) thực chất là một "ý kiến" của 1.600 đầu vào thô, trong đó một số đầu vào có tiếng nói lớn hơn những người khác dựa trên giá trị trọng số của chúng.
+- **Biểu đồ Nhiệt 2D cho Vector 1D**: Khi trực quan hóa 1.600 trọng số, việc reshape về dạng ma trận 2D (ví dụ: 25x64) giúp mắt người dễ dàng nhận diện các mẫu (patterns) phân bổ hơn là xem một dải vạch dài vô tận.
+
+## Ngôn ngữ Biểu đạt sư phạm (Pedagogical Analogies)
+- **Cơ chế 'Bầu cử' (Voting Analogy)**: Việc giải thích lớp Dense thông qua hình ảnh "Cử tri" (flatten_out) và "Đại biểu" (dense_out) giúp người dùng không có nền tảng toán học vẫn nắm bắt được bản chất của phép Nhân ma trận (Matrix Multiplication). 
+- **Trực quan hóa 'Sự đóng góp' (Contribution Map)**: Thay vì chỉ cho thấy Trọng số ($W$), việc cho thấy kết quả của phép nhân $X \times W$ (Sự đóng góp thực tế) giúp trả lời câu hỏi: "Tại sao nơ-ron này lại ra con số này?".
+
+## Giải mã Phép biến đổi Dữ liệu (Data Transformation Clarity)
+- **Flatten ➡️ Dense**: Việc tách biệt rõ ràng bước "Duỗi thẳng" (Flatten) và bước "Nén đặc trưng" (Dense) giúp người dùng thấy rõ quá trình chuyển đổi từ dạng dữ liệu không gian (Spatial - 3D) sang dạng dữ liệu định danh (Identifying - 1D Vector). Biểu đồ vạch (Plot) cho Flatten và biểu đồ cột (Bar chart) cho Dense tạo ra sự tương phản thị giác cần thiết để phân biệt hai trạng thái dữ liệu này.
+
+## Giáo dục AI tương tác (Interactive AI Anatomy)
+- **Mô phỏng Dropout**: Việc "mô phỏng" các lớp vốn chỉ có tác dụng trong quá trình huấn luyện (Inference-transparent) như Dropout giúp người dùng hiểu sâu hơn về cơ chế "đề kháng" của AI. Việc cho phép tắt/mở chế độ huấn luyện (Toggle) biến giao diện từ một hệ thống dự đoán thành một công cụ giảng dạy thị giác cực kỳ hiệu quả.
+- **Tính Nhất quán giữa Tài liệu và Giao diện**: Việc bám sát sơ đồ Mermaid (Architecture Map) trong mã nguồn UI giúp tài liệu kỹ thuật trở nên sống động và đáng tin cậy hơn đối với người đọc.
+
+## Lỗi Cú pháp F-string (F-string Escaping)
+- **Cẩn thận với dấu ngoặc nhọn**: Khi sử dụng f-string trong Python để tạo chuỗi chứa mã HTML/JS hoặc Mermaid, cần phân biệt rõ giữa `{variable}` (để chèn biến) và `{{ ... }}` (để tạo ra dấu ngoặc nhọn thực tế cho JS). Việc nhầm lẫn `{{variable}}` sẽ khiến biến không được thực thi mà chỉ hiển thị chuỗi văn bản thuần túy, gây lỗi cú pháp cho trình giải mã (như Mermaid).
+
+## Tối ưu hóa Giao diện (UI Optimization)
+- **Cơ chế Ẩn/Hiện nội dung (Conditional Rendering)**: Đối với các thành phần chiếm nhiều diện tích như Bản đồ kiến trúc (Mermaid), việc ẩn đi theo mặc định và chỉ hiện khi người dùng yêu cầu (`st.checkbox` hoặc `st.toggle`) giúp giao diện gọn gàng hơn và tập trung vào dữ liệu chính.
+- **Trải nghiệm người dùng (UX)**: Việc cung cấp quyền kiểm soát việc hiển thị giúp người dùng không bị "ngợp" (overwhelmed) bởi quá nhiều thông tin kỹ thuật ngay khi vừa truy cập.
+
+## Ngôn ngữ Báo cáo Thuần Việt (Pure Vietnamese)
+- **Chuẩn hóa Thuật ngữ**: Việc chuyển đổi 100% sang tiếng Việt (như "Độ bao phủ", "Độ trễ xử lý", "Duy trì phiên") giúp báo cáo trở nên đồng nhất, dễ đọc và thể hiện sự làm chủ công nghệ thay vì lạm dụng thuật ngữ ngoại lai.
+- **Văn phong Chuyên môn**: Tránh sử dụng các dấu hiệu nhấn mạnh bừa bãi như ngoặc kép hay tên file giúp tài liệu mang tính phổ quát và chuyên nghiệp hơn, phù hợp với tiêu chuẩn giáo trình.
+- **Đánh giá Thực nghiệm**: Việc nhìn nhận khách quan cả thành công và hạn chế (như biển báo quá nhỏ hay che khuất) giúp tăng độ tin cậy cho toàn bộ dự án nghiên cứu.
+
+## Kỹ năng Viết Báo cáo Kỹ thuật (Standard Documentation)
+- **Tính Phổ quát (Universality)**: Tuyệt đối tránh đưa tên file vật lý (ví dụ: `app.py`, `script.js`) vào các mục báo cáo tổng quan. Việc sử dụng các thuật ngữ như "Phân hệ", "Tầng kiến trúc" giúp tài liệu mang tính học thuật cao và có thể áp dụng cho bất kỳ dự án nào cùng lĩnh vực.
+- **Xóa dấu vết Mã nguồn**: Một báo cáo chuyên nghiệp là báo cáo mà người đọc không cần nhìn thấy code vẫn hình dung được toàn bộ hệ thống. Sử dụng các "Hành lang trực quan" thay vì liệt kê các biến hay hàm cụ thể.
+- **Tư duy Hệ thống (System Thinking)**: Giải thích Dashboard dưới góc độ thiết kế tương tác Người - Máy (HCI) và quản lý tài nguyên (Caching/Session) thay vì chỉ là một trang web đơn giản.
+
+## Quản trị Giao diện (Streamlit Engineering)
+- **Separation of Concerns (SoC)**: Việc tách logic xử lý (`src/`) khỏi logic hiển thị (`views/`) là chìa khóa để Dashboard ổn định, ngay cả khi chúng ta thay đổi thuật toán lõi bên dưới.
+- **Tư duy Giải phẫu (Anatomy Approach)**: Chia nhỏ 7 bước phát hiện và hiển thị Feature Maps của CNN biến ứng dụng từ công thực dự đoán thành công cụ đào tạo AI hiệu quả.
+- **Tối ưu hóa Phụ tải (Caching Strategies)**: `st.cache_resource` cho mô hình và `st.cache_data` cho dữ liệu trung gian giúp giảm 80% thời gian phản hồi khi người dùng tương tác với thanh Sliders.
+
+## Xây dựng Giao diện (Streamlit Dashboard)
+- **Tư duy Modular View**: Việc chia nhỏ ứng dụng thành các `views` và `components` giúp code dễ bảo trì hơn rất nhiều so với việc để hàng ngàn dòng code trong một file `app.py`.
+- **Tầm quan trọng của Caching**: Sử dụng `st.cache_resource` cho các mô hình nặng (CNN, SVM) là yếu tố sống còn để Dashboard không bị giật lag khi người dùng thao tác.
+- **Sức mạnh của Real-time Sliders**: Cho phép người dùng tự tay chỉnh Thresholds (như $S, V$ trong HSV) không chỉ giúp họ hiểu rõ toán học mà còn giúp chúng ta tìm ra bộ tham số tốt nhất một cách trực quan cực nhanh.
+- **Thẩm mỹ AI (UI/UX)**: Một giao diện đẹp (Dark mode, Glassmorphism) làm tăng độ tin cậy của sản phẩm công nghệ cao, biến một đồ án khô khan thành một sản phẩm có tính thương mại cao.
+
+## Cân bằng thích nghi CLAHE (Theory)
+- **Hàm phân bố tích lũy (CDF) cục bộ**: Việc áp dụng CDF trên từng Tile giúp làm nổi bật chi tiết ở các vùng ranh giới sáng-tối, điều mà HE toàn cục không thể làm được.
+- **Nội suy song tuyến tính**: Đây là phép toán "mượt hóa" kỳ diệu để xóa bỏ hiện tượng ô bàn cờ (blocking artifacts). Hiểu được trọng số $(1-a)(1-b)$ giúp ta giải thích tại sao ảnh sau CLAHE lại trông tự nhiên như vậy.
+- **Vai trò của Clip Limit**: Cắt ngọn Histogram giúp kiểm soát sự khuếch đại nhiễu, đảm bảo độ mịn cho các vùng đồng nhất.
+
+## Tài liệu học thuật (Academic Documentation)
+- **Tách biệt Lý thuyết và Ứng dụng**: Việc viết các mục lý thuyết (như 3.2.1) dưới dạng giáo trình chuẩn giúp người đọc nắm được bản chất cốt lõi của thuật toán (như triết lý Dalal-Triggs) trước khi đi vào các chi tiết thực thi (như Code hay App).
+- **Tính Phổ quát (Generality)**: Hạn chế tối đa việc nhắc đến tên file hay các biến cụ thể trong phần lý thuyết giúp tài liệu có giá trị tham khảo rộng rãi hơn cho cộng đồng nghiên cứu.
+- **Sự quan trọng của chuẩn hóa (Normalization Schemes)**: Hiểu được sự khác biệt giữa L2-norm và L2-Hys (Lowe's scheme) giúp giải quyết các bài toán về độ tương phản cực đoan trong ảnh thực tế.
+
+## Hình thái học và MSER (Morphology & MSER)
+- **Tư duy Hình thái học**: Việc coi ảnh là các tập hợp điểm giúp ta áp dụng được các phép toán logic như Giãn (Union) và Co (Intersection) một cách hiệu quả để vá các lỗ hổng trên biển báo.
+- **Tính ổn định của MSER**: Đây là kiến thức chuyên sâu để giải quyết bài toán phát hiện vật thể dưới mọi điều kiện ánh sáng. Việc hiểu công thức độ biến thiên diện tích ($q$) giúp ta tinh chỉnh tham số Delta một cách khoa học.
+- **Sự kết hợp (Closing + MSER)**: MSER tìm vùng ổn định, còn Closing kết nối các ký hiệu bên trong biển báo thành một khối vững chắc.
+
+## Không gian màu và Phân đoạn (Color Spaces)
+- **Tầm quan trọng của Normalized RGB**: Đây là một bước đệm cực kỳ thông minh để triệt tiêu ảnh hưởng của cường độ sáng tổng thể, giúp màu sắc "tự nói lên bản chất của nó" thông qua tỷ lệ $R/G/B$.
+- **Bản chất của Hue (HSV)**: Hue là góc quay trong không gian màu. Hiểu được công thức $\Delta/C_{max}$ giúp giải thích tại sao màu trắng/xám lại không có Hue ổn định (khi $\Delta \approx 0$).
+- **Ứng dụng của Saturation**: Việc kết hợp Hue và Saturation là "chìa khóa" để loại bỏ các vùng nhiễu trắng (như mây, phản chiếu) vốn có Saturation cực thấp.
+
+## Quy chuẩn Tài liệu (Standardization)
+- **Hạn chế File nội bộ**: Tránh sử dụng tên file cụ thể của dự án (ví dụ: `app.py`, `detect.py`) trong các mục lý thuyết của báo cáo. Thay vào đó, hãy gọi tên quy trình hoặc tính năng (ví dụ: "Hệ thống phát hiện", "Giao diện trực quan") để bất kỳ ai đang làm dự án tương tự cũng có thể đọc và hiểu ngay bản chất kỹ thuật.
+- **Tính Di động (Portability)**: tài liệu kỹ thuật tốt phải có khả năng "tách rời" khỏi project mẹ mà vẫn giữ được giá trị học thuật cao.
+
+## Loại bỏ chồng lấn (NMS & IoU)
+- **IoU - Thước đo Công bằng**: Hiểu rõ công thức IoU giúp ta biết tại sao các khung hình bị xóa (khi IoU > Threshold). Việc tính toán diện tích Inter và Union là nền tảng hình học cơ bản của bài toán Detection.
+- **Chiến thuật "Vua" (Greedy)**: Việc sắp xếp theo Confidence trước khi thực hiện NMS đảm bảo chúng ta luôn giữ lại khung hình có khả năng cao nhất là biển báo thực sự.
+- **Tầm quan trọng của Threshold**: Ngưỡng IoU quá nhỏ sẽ xóa cả những biển báo nằm cạnh nhau, quá lớn sẽ không dọn dẹp hết khung hình thừa. Việc tìm "điểm ngọt" (ví dụ 0.3) là một quá trình thực nghiệm quan trọng.
+
+## Quy trình Masking (Lọc vùng màu)
+- **Kiểm tra 3 tầng**: Masking không chỉ là một công thức, mà là quy trình kiểm tra 3 điều kiện đồng thời (Hue - Saturation - Value). Việc giải thích theo dạng "Lọc qua rây" giúp người dùng dễ dàng hình dung hơn tại sao một pixel lại trở thành Trắng hay Đen.
+- **Tầm quan trọng của ví dụ Số học**: Việc đưa ra các thông số cụ thể ($160, 200, 150 \rightarrow 255$) giúp người đọc nắm bắt được quy trình logic vốn diễn ra hàng triệu lần trong chớp mắt của máy tính.
+
+## Độ sâu kỹ thuật (Technical Depth)
+- **Nội suy song tuyến tính (Bi-linear Interpolation)**: Trong CLAHE, nếu không có nội suy, ảnh sẽ bị hiện tượng "ô bàn cờ" rất xấu. Đây là bí quyết toán học để làm mịn các vùng biên giữa các Tiles.
+- **Toán tử Laplacian**: Hiểu về ma trận Kernel giúp ta biết tại sao nó lại nhạy cảm với cạnh (tổng trọng số các ô lân cận đối nghịch với ô trung tâm).
+- **Hình thể học (Solidity)**: Việc kết hợp giữa diện tích lồi và diện tích bao giúp loại bỏ rác hiệu quả hơn rất nhiều so với chỉ dùng diện tích đơn thuần.
+
+## Báo cáo và Trình bày (Report & Presentation)
+- **Công thức tường minh**: Trong báo cáo kỹ thuật "Math for AI", không được để bất kỳ đối tượng nào ở dạng "hộp đen". Cần đưa ra công thức Toán học tường minh kèm ví dụ số học thực tế để làm rõ bản chất của các chỉ số như F1-Score (Trung bình điều hòa).
+- **So sánh trực quan**: Việc so sánh giữa các kịch bản (ví dụ: Mô hình A vs Mô hình B) giúp người đọc thấy rõ tại sao lại chọn chỉ số này thay vì chỉ số kia.
+
+## Thuật toán Đề xuất vùng (Region Proposal)
+- **CLAHE và CDF**: Cân bằng sáng cục bộ là "cứu cánh" cho các biển báo trong bóng râm. Việc hiểu rõ Hàm phân bố tích lũy (CDF) giúp điều chỉnh ClipLimit một cách khoa học thay vì chỉ đoán số.
+- **Tách biệt Hue (HSV)**: Trục Hue của OpenCV chỉ chạy từ $0-179$ (thay vì $0-360^\circ$). Việc tracking dải màu Đỏ ở hai đầu (0-15 và 155-179) là kiến thức nền tảng để không bỏ sót biển báo cấm.
+- **Lọc Hình học (Solidity)**: Đây là bộ lọc "diệt nhiễu" hiệu quả nhất. Biển báo là vật thể đặc, nên tỷ lệ lấp đầy (Solidity) luôn cao hơn hẳn so với nhiễu lá cây hay nhiễu kỹ thuật số.
 
 ## Tài liệu chuyên nghiệp (Standard Documentation)
 - **Tính Phổ quát (Universality)**: Tài liệu kỹ thuật tốt không nên quá phụ thuộc vào tên file nội bộ mà cần diễn đạt quy trình dưới dạng kiến thức chuẩn để người dùng khác có thể tham khảo cho các dự án tương tự.

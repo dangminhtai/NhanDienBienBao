@@ -27,3 +27,33 @@
 
 9. **[EVAL001] Precision-Recall Curve:** 
     - Vẽ biểu đồ đường cong Precision-Recall để anh có thể trực quan hóa khả năng hoạt động của mô hình ở các ngưỡng xác suất (Probability threshold) khác nhau trên Dashboard.
+
+10. **[PROPOSAL001] Hình thái học Thích nghi (Adaptive Morphology):** 
+    - Hiện tại Kernel Morph (9x9) là cố định. Cần phát triển logic tự động tính toán kích thước Kernel dựa trên Res (độ phân giải) của ảnh và khoảng cách dự kiến để vá lỗ hổng tốt hơn cho biển báo ở xa.
+
+11. **[COLOR001] Kiểm nghiệm Normalized RGB cho vùng có bóng đổ (Shadow Detection):** 
+    - Hiện dự án dùng HSV là chính. Có thể tích hợp thêm lớp kiểm tra Normalized RGB để tăng độ chính xác tại các vùng biển báo bị bóng đổ đè lên, nơi Hue vẫn giữ nguyên nhưng độ rực rỡ (S) bị thay đổi mạnh.
+
+12. **[MSER001] Tích hợp bộ dò MSER cho phát hiện xa (High Resolution):** 
+    - Với các biển báo cực nhỏ ở xa, bộ lọc HSV có thể bỏ sót. Thử nghiệm MSER để phát hiện các "vùng cực trị" ổn định có thể tăng recall đáng kể cho ảnh độ phân giải cao.
+
+13. **[UI001] Giao diện Tương tác nâng cao (UI/UX):** 
+    - Phát triển nút gạt (Toggle) chế độ Sáng/Tối trực quan hơn và tích hợp thêm các báo cáo PDF tự động sau khi Batch Processing kết thúc để người dùng dễ dàng lưu trữ kết quả.
+
+14. **[UI002] Tối ưu hóa không gian hiển thị (Space Optimization):** 
+    - Áp dụng cơ chế `st.expander` hoặc `st.popover` cho các biểu đồ kỹ thuật số phụ trợ để giao diện chính tập trung hoàn toàn vào kết quả hình ảnh, giúp người dùng không có chuyên môn vẫn dễ dàng tiếp cận.
+
+15. **[UI003] Cơ chế xử lý lỗi đồ họa (Robust Rendering):** 
+    - Xây dựng lớp bọc (wrapper) cho các thành phần HTML/JS tùy chỉnh để bắt lỗi cú pháp (Syntax error) và hiển thị thông báo thay thế (fallback) thay vì làm treo hoặc hiện thông báo lỗi của trình duyệt lên Dashboard.
+
+16. **[AI001] Chế độ Chồng lớp Kích hoạt (Activation Overlays):** 
+    - Tích hợp tính năng chồng lớp Feature Maps trực tiếp lên ảnh gốc (như mô hình Grad-CAM) để người dùng thấy rõ AI đang "chú ý" vào vùng pixel nào trên biển báo thực tế.
+
+17. **[AI002] Trực quan hóa 3D (3D Tensor Projection):** 
+    - Thử nghiệm trình diễn các khối dữ liệu Conv (ví dụ: 14x14x64) dưới dạng khối 3D tương tác, giúp người xem hình dung rõ ràng về khái niệm "Volume" trong Deep Learning.
+
+18. **[AI003] Phân tích cụm Đặc trưng (Feature Cluster Analysis):** 
+    - Sử dụng thuật toán t-SNE hoặc PCA để trực quan hóa vector 256 chiều lên không gian 2D/3D, giúp người dùng thấy được cách AI "gom nhóm" các biển báo cùng loại lại gần nhau trong không gian đặc trưng.
+
+19. **[AI004] Thử nghiệm Kích hoạt Nơ-ron (Neuron Probing):** 
+    - Cho phép người dùng "vẽ" hoặc sửa đổi trực tiếp các điểm trên bản đồ 5x5 để xem các Gene (256 biến) thay đổi thế nào trong thời gian thực, giúp hiểu rõ mối quan hệ nhân quả (Causality) trong mạng CNN.

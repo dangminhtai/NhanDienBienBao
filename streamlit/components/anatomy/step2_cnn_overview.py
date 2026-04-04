@@ -11,69 +11,70 @@ def render_cnn_overview(raw_ndarray, current_dir):
 
     # 2.0: Bản đồ dòng chảy (Architecture Map - Mermaid Edition)
     st.markdown("---")
-    st.markdown("### 🗺️ 2.0: Bản đồ Tổng quan (Full Architecture Map)")
+    if st.checkbox("🗺️ Hiển thị Bản đồ Kiến trúc Toàn cảnh (Full Architecture Map)", value=False):
+        st.markdown("### 🗺️ 2.0: Bản đồ Tổng quan (Full Architecture Map)")
+        
+        # ... (Mermaid code remains the same)
+        mermaid_code = """
+        graph TD
+            %% --- BƯỚC 1 ---
+            Input["🖼️ 1. Ảnh Biển Báo (32x32x3)"]
+            Norm["🛠️ 2.1.1: Chuẩn hóa / 255.0"]
+            Input --> Norm
     
-    # ... (Mermaid code remains the same)
-    mermaid_code = """
-    graph TD
-        %% --- BƯỚC 1 ---
-        Input["🖼️ 1. Ảnh Biển Báo (32x32x3)"]
-        Norm["🛠️ 2.1.1: Chuẩn hóa / 255.0"]
-        Input --> Norm
-
-        %% --- KHỐI CONV 1 (TẦM SOÁT CẠNH) ---
-        subgraph "🧱 2.1: KHỐI CONV 1 (Sơ cấp)"
-            Norm --> C1["🔍 2.1.2: Conv2D_1 <br/> 30x30x32"]
-            C1 --> R1["⚡ 2.1.3: ReLU_1"]
-            R1 --> C2["🔍 2.1.4: Conv2D_2 <br/> 28x28x64"]
-            C2 --> R2["⚡ ReLU_2"]
-            R2 --> P1["🧹 2.1.5: Pool_1 <br/> 14x14x64"]
-            P1 --> D1["🚿 Dropout"]
-        end
-
-        %% --- KHỐI CONV 2 (SOI CHI TIẾT) ---
-        subgraph "🧱 2.2: KHỐI CONV 2 (Trung cấp)"
-            D1 --> C3["🧐 Conv2D_3 <br/> 12x12x32"]
-            C3 --> R3["⚡ ReLU_3"]
-            R3 --> C4["🧐 Conv2D_4 <br/> 10x10x64"]
-            C4 --> R4["⚡ ReLU_4"]
-            R4 --> P2["🧹 Pool_2 <br/> 5x5x64"]
-            P2 --> D2["🚿 Dropout"]
-        end
-
-        %% --- BƯỚC NÉN (FLATTEN & DENSE) ---
-        subgraph "🧬 2.3: BƯỚC NÉN (Định danh)"
-            D2 --> Flat["📏 Flatten <br/> 1,600 số"]
-            Flat --> Dense["🧬 Dense (feature_dense) <br/> 256 Mã Gene"]
-        end
-
-        %% --- KẾT QUẢ ---
-        Dense --> Output["💎 Vector Đặc Trưng Deep Feature (256,)"]
-
-        %% --- STYLE ---
-        style Input fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
-        style Output fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
-        style Dense fill:#a5d6a7,stroke:#388e3c,stroke-width:3px
-        style C1 fill:#e3f2fd,stroke:#2196f3
-        style C2 fill:#e3f2fd,stroke:#2196f3
-        style C3 fill:#e3f2fd,stroke:#2196f3
-        style C4 fill:#e3f2fd,stroke:#2196f3
-        style P1 fill:#c8e6c9,stroke:#388e3c
-        style P2 fill:#c8e6c9,stroke:#388e3c
-    """
+            %% --- KHỐI CONV 1 (TẦM SOÁT CẠNH) ---
+            subgraph "🧱 2.1: KHỐI CONV 1 (Sơ cấp)"
+                Norm --> C1["🔍 2.1.2: Conv2D_1 <br/> 30x30x32"]
+                C1 --> R1["⚡ 2.1.3: ReLU_1"]
+                R1 --> C2["🔍 2.1.4: Conv2D_2 <br/> 28x28x64"]
+                C2 --> R2["⚡ ReLU_2"]
+                R2 --> P1["🧹 2.1.5: Pool_1 <br/> 14x14x64"]
+                P1 --> D1["🚿 Dropout"]
+            end
     
-    # Render Mermaid (Using components.html as before)
-    import streamlit.components.v1 as components
-    html = f"""
-    <div id="mermaid-diag" class="mermaid" style="display: flex; justify-content: center;">
-        {mermaid_code}
-    </div>
-    <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-        mermaid.initialize({{ startOnLoad: true, theme: 'default' }});
-    </script>
-    """
-    components.html(html, height=800, scrolling=True)
+            %% --- KHỐI CONV 2 (SOI CHI TIẾT) ---
+            subgraph "🧱 2.2: KHỐI CONV 2 (Trung cấp)"
+                D1 --> C3["🧐 Conv2D_3 <br/> 12x12x32"]
+                C3 --> R3["⚡ ReLU_3"]
+                R3 --> C4["🧐 Conv2D_4 <br/> 10x10x64"]
+                C4 --> R4["⚡ ReLU_4"]
+                R4 --> P2["🧹 Pool_2 <br/> 5x5x64"]
+                P2 --> D2["🚿 Dropout"]
+            end
+    
+            %% --- BƯỚC NÉN (FLATTEN & DENSE) ---
+            subgraph "🧬 2.3: BƯỚC NÉN (Định danh)"
+                D2 --> Flat["📏 Flatten <br/> 1,600 số"]
+                Flat --> Dense["🧬 Dense (feature_dense) <br/> 256 Mã Gene"]
+            end
+    
+            %% --- KẾT QUẢ ---
+            Dense --> Output["💎 Vector Đặc Trưng Deep Feature (256,)"]
+    
+            %% --- STYLE ---
+            style Input fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+            style Output fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+            style Dense fill:#a5d6a7,stroke:#388e3c,stroke-width:3px
+            style C1 fill:#e3f2fd,stroke:#2196f3
+            style C2 fill:#e3f2fd,stroke:#2196f3
+            style C3 fill:#e3f2fd,stroke:#2196f3
+            style C4 fill:#e3f2fd,stroke:#2196f3
+            style P1 fill:#c8e6c9,stroke:#388e3c
+            style P2 fill:#c8e6c9,stroke:#388e3c
+        """
+        
+        # Render Mermaid (Using components.html as before)
+        import streamlit.components.v1 as components
+        html = f"""
+        <div id="mermaid-diag" class="mermaid" style="display: flex; justify-content: center;">
+            {mermaid_code}
+        </div>
+        <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+            mermaid.initialize({{ startOnLoad: true, theme: 'default' }});
+        </script>
+        """
+        components.html(html, height=800, scrolling=True)
 
     # 2.1: KHỐI CONV 1 (Sơ cấp)
     st.markdown("---")
