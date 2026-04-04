@@ -84,6 +84,11 @@
 - **Developer vs End-User**: Khi xây dựng Dashboard trực quan, cần phân biệt rõ giữa "Debug Tool" (dành cho lập trình viên - show file, dòng code) và "Pedagogical Tool" (dành cho người học - show khái niệm, sơ đồ). Việc trộn lẫn hai vai trò này sẽ làm giảm tính chuyên môn của ứng dụng và gây bối rối cho người xem không có nền tảng kỹ thuật.
 - **Chia nhỏ Logic (Logical Sub-steps)**: Đối với các thuật toán phức tạp như SVM, việc chia nhỏ thành các tiểu bước (Tiếp nhận ➡️ Phân tích ➡️ Đối soát ➡️ Phán quyết) giúp tạo ra một "Câu chuyện Dữ liệu" (Data Storytelling) mạch lạc hơn là chỉ hiển thị một biểu đồ kết quả cuối cùng.
 
+## Trực quan hóa Không gian Kernel (Kernel Space Visualization)
+- **Mô phỏng Phản dữ liệu (Counterfactual Simulation)**: Khi mô hình đã chốt một Kernel cố định, việc mô phỏng các Kernel khác (RBF, Poly, Sigmoid) trên cùng một ảnh hiện tại giúp người dùng hiểu tại sao Kernel đó được chọn. Việc so sánh các "Không gian song song" này giúp làm rõ bản chất hình học của SVM.
+- **Tích hợp LaTeX**: Sử dụng biểu thức toán học LaTeX trực tiếp dưới các biểu đồ giúp gắn kết giữa lý thuyết hàn lâm và thực thi thực tế, tạo ra sự tin tưởng tuyệt đối vào kết quả của AI.
+- **Tọa độ Biến thiên (Dynamic Coordinates)**: Việc ánh xạ vị trí "Ngôi sao đỏ" (Ảnh hiện tại) từ vector 256 chiều xuống 2 chiều dựa trên các Gene quan trọng nhất giúp giao diện "sống" và thay đổi theo từng tấm ảnh, xóa bỏ cảm giác "hard-code".
+
 ## Giải thích Tính thời điểm của Dữ liệu (Temporal Explanation)
 - **Train vs Inference**: Khi trực quan hóa các phép toán thống kê (như StandardScaler), việc làm rõ nguồn gốc của các tham số ($\mu, \sigma$) là cực kỳ quan trọng. Cần nhấn mạnh rằng chúng có nguồn gốc từ **Tập huấn luyện (Training Set)** chứ không phải tính toán tức thời trên dữ liệu mới. Điều này giúp người dùng hiểu rõ khái niệm "Tri thức đã học" (Learned Knowledge) trong AI.
 
