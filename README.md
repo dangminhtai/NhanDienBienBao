@@ -5,6 +5,7 @@ Dự án này triển khai một hệ thống AI tiên tiến kết hợp giữa
 ## 🌟 Tính năng chính
 - **Chế độ Dự đoán nhanh**: Tải lên ảnh biển báo đã cắt để nhận diện ngay lập tức với độ chính xác cao.
 - **Chế độ Phát hiện & Nhận diện**: Tự động tìm kiếm nhiều biển báo bên trong một bức ảnh phong cảnh (Toàn cảnh) và định danh từng biển báo.
+- **Chế độ Phát hiện từ Video**: Xử lý luồng video (.mp4) theo thời gian thực, tự động khoanh vùng và nhận diện biển báo khi xe đang di chuyển.
 - **Minh bạch Toán học**: Giải trình chi tiết quy trình trích xuất đặc trưng sâu (Deep Features) và cơ chế phân loại Maximum Margin của SVM.
 
 ## 🏗️ Kiến trúc Hệ thống (Hybrid v4.0)

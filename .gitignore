@@ -1,4 +1,9 @@
 /streamlit/dataset/*
 /streamlit/models/*
+/streamlit/videos/*
 /docs/*
 /temps
+*.mp4
+*.avi
+*.mov
+*.mkv

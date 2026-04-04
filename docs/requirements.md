@@ -11,6 +11,7 @@
 | REQ007 | Github Policy | Không tự động đẩy code lên Github trừ khi có yêu cầu. | Hoàn thành |
 | REQ008 | Minh bạch toán học | Giải thích quy trình dự đoán từ cơ sở toán học đến số liệu thực tế. | Hoàn thành |
 | REQ009 | Sơ đồ Tổng quan | Hiển thị Bản đồ Dòng chảy (map2.md) trực tiếp trên giao diện UI. | Hoàn thành |
+| REQ010 | Phát hiện từ Video | Xử lý và nhận diện biển báo từ video nguồn (.mp4, .avi). | Đang thực hiện |
 
 ## Quy trình triển khai Step-by-step
 1. **Thiết lập môi trường**: Cài đặt dependencies từ `requirements.txt`.

@@ -8,6 +8,9 @@ Dưới đây là danh sách các lỗi kỹ thuật phát hiện được trong
 | ISSUE#002 | Module Collision | Xung đột tên 'streamlit' với thư viện hệ thống khi import các thành phần anatomy. | ✅ Đã Fix |
 | ISSUE#003 | Math Mismatch (ReLU) | Kết quả tính tay và kết quả mô hình không khớp do thiếu bước ReLU Activation. | ✅ Đã Fix |
 | ISSUE#004 | KeyError Module Import | Lỗi KeyError: 'components.anatomy.step2_conv_layers' khi import tại single_predict.py. | ✅ Đã Fix |
+| ISSUE#005 | Video Upload Limit | Mặc định Streamlit giới hạn upload 200MB, gây lỗi khi tải video clip dài. | ✅ Đã Fix |
+| ISSUE#006 | Video Directory Mismatch | Đường dẫn thư mục videos bị lặp lại 'streamlit/streamlit/videos'. | ✅ Đã Fix |
+| ISSUE#008 | Video Mode UI Missing | Giao diện Video không hiện ra do tham số check app_mode bị lệch tên (đã thêm - Beta). | ✅ Đã Fix |
 
 ---
-*Ghi chú: Issue #001 sẽ được fix bằng giải pháp st.session_state.*
+*Ghi chú: Issue #008 sửa lại string comparison trong app.py.*

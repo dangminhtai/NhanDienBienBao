@@ -11,6 +11,7 @@ from src.class_metadata import get_class_names
 from views.single_predict import render_single_predict_view
 from views.batch_process import render_batch_process_view
 from views.full_image_detect import render_full_image_view
+from views.video_detect import render_video_detect_view
 from views.math_visualizer import render_math_section
 
 # Cấu hình trang
@@ -29,7 +30,7 @@ def main():
     st.sidebar.title("🚦 Hệ thống Nhận diện")
     
     app_mode = st.sidebar.radio("Chọn chế độ hoạt động:", 
-                                ["Dự đoán nhanh (Single Sign)", "Phát hiện & Nhận diện (Full Image)", "Quét Thư mục (Batch Mode)"])
+                                ["Dự đoán nhanh (Single Sign)", "Phát hiện & Nhận diện (Full Image)", "Phát hiện từ Video (Video Mode) - Beta", "Quét Thư mục (Batch Mode)"])
     
     st.sidebar.markdown("---")
     
@@ -38,7 +39,7 @@ def main():
     auto_tune = False
     show_debug = False
     
-    if app_mode in ["Phát hiện & Nhận diện (Full Image)", "Quét Thư mục (Batch Mode)"]:
+    if app_mode in ["Phát hiện & Nhận diện (Full Image)", "Phát hiện từ Video (Video Mode) - Beta", "Quét Thư mục (Batch Mode)"]:
         st.sidebar.subheader("🛠️ Cấu hình Detection")
         det_params['min_s'] = st.sidebar.slider("Độ bão hòa tối thiểu (Saturation)", 0, 255, 80)
         det_params['min_v'] = st.sidebar.slider("Độ sáng tối thiểu (Value)", 0, 255, 40)
@@ -91,6 +92,9 @@ def main():
     if app_mode == "Quét Thư mục (Batch Mode)":
         render_batch_process_view(current_dir, cnn_extractor, rec_scaler, svm_model, class_names, det_params, auto_tune)
         
+    elif app_mode == "Phát hiện từ Video (Video Mode) - Beta":
+        render_video_detect_view(cnn_extractor, rec_scaler, svm_model, class_names, current_dir, det_params)
+
     else:
         # Chế độ ảnh đơn (Upload: dùng chung cho Single và Full Image)
         uploaded_file = st.file_uploader("📥 Chọn ảnh...", type=["jpg", "png", "jpeg"])

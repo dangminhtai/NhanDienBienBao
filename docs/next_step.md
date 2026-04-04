@@ -4,6 +4,9 @@
     - Cho phép anh tải file CSV chứa danh sách: `Tên file | Nhãn | Độ tin cậy | Tọa độ Box`.
     - Điều này rất quan trọng để anh làm báo cáo cuối kỳ.
 
+2. **[OPT002] Giảm Lag cho Video Mode (Beta):**
+    - Hiện tại xử lý tuần tự (Synchronous) gây lag. Cần chuyển sang kiến trúc Producer-Consumer (xử lý khung hình ở luồng riêng) để UI luôn mượt mà ở 30FPS.
+
 2. **[OPT001] Tăng tốc Batch Mode:**
     - Hiện tại quét ~300 ảnh mất khoảng 40-50s. Nếu dùng đa luồng (Multi-threading) có thể giảm xuống còn 10-15s.
 
