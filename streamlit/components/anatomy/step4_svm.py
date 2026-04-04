@@ -15,13 +15,23 @@ def render_svm_classification(svm_model, scaled_features, class_names, current_p
         with open(step4_path, "r", encoding="utf-8") as f:
             st.markdown(f.read())
 
-    # 2. Phân tích xác suất chi tiết
-    st.markdown("### 📊 Hội đồng Xét duyệt: Top 5 Ứng cử viên")
+    # Khởi tạo giá trị mặc định để tránh lỗi UnboundLocalError
+    top_5_names = [class_names.get(current_prediction_id, f"Nhãn {current_prediction_id}")]
+    top_5_probs = [1.0] # Mặc định 100% nếu không tính được xác suất cụ thể
     
     try:
-        # Lấy xác suất của tất cả 43 lớp
-        probs = svm_model.predict_proba(scaled_features)[0]
-        
+        # Kiểm tra xem Model có hỗ trợ xác suất không
+        if hasattr(svm_model, 'predict_proba'):
+            probs = svm_model.predict_proba(scaled_features)[0]
+        else:
+            # Fallback: Dùng decision_function (khoảng cách tới siêu mặt phẳng)
+            # Sau đó dùng Softmax để đưa về dạng xác suất (mô phỏng)
+            scores = svm_model.decision_function(scaled_features)[0]
+            # Softmax function
+            exp_scores = np.exp(scores - np.max(scores)) # Tránh tràn số
+            probs = exp_scores / exp_scores.sum()
+            st.info("ℹ️ Hệ thống dùng thuật toán Khoảng cách (Decision Function) để ước tính xác suất.")
+
         # Sắp xếp để lấy top 5
         top_5_indices = np.argsort(probs)[-5:][::-1]
         top_5_probs = probs[top_5_indices]
@@ -52,11 +62,11 @@ def render_svm_classification(svm_model, scaled_features, class_names, current_p
             Đây là nhãn có "khoảng cách" an toàn nhất so với các Siêu mặt phẳng biên giới.
             """)
             
-            if top_5_probs[1] > 0.05:
-                st.warning(f"💡 **AI đang phân vân?** Có vẻ biển báo này cũng khá giống với **{top_5_names[1]}**. Điều này thường xảy ra khi hình ảnh bị mờ hoặc có góc chụp lạ.")
+            if len(top_5_probs) > 1 and top_5_probs[1] > 0.05:
+                st.warning(f"💡 **AI đang phân vân?** Có vẻ biển báo này cũng khá giống với **{top_5_names[1]}**.")
 
     except Exception as e:
-        st.error(f"⚠️ Không thể thực hiện phân tích xác suất: {str(e)}")
+        st.error(f"⚠️ Lỗi khi phân tích xác suất: {str(e)}")
 
     # 3. Minh họa Không gian Quyết định (Decision Space Simulation)
     st.markdown("### 🗺️ Bản đồ Không gian Quyết định (Mô phỏng 2D)")

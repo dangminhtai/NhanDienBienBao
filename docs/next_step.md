@@ -67,5 +67,8 @@
 22. **[AI006] Chiếu Tọa độ Thực (Real-time t-SNE Projection):** 
     - Xây dựng một module chạy ngầm để tính toán tọa độ t-SNE/UMAP thực tế cho vector 256 chiều, giúp người dùng thấy vị trí chính xác của ảnh mình vừa tải lên trong mối tương quan với toàn bộ 34.000 điểm dữ liệu huấn luyện.
 
+23. **[AI007] Hiệu chuẩn Thống kê (Platt Scaling):** 
+    - Nghiên cứu tích hợp phương pháp Platt Scaling để chuyển đổi điểm số `decision_function` của SVM thành xác suất thực tế một cách chuẩn xác hơn so với hàm Softmax đơn giản, tăng độ tin cậy cho biểu đồ phân tích Step 4.
+
 22. **[UI005] Khám phá Phân bổ (Distribution Explorer):** 
     - Cho phép người chọn 1 Gene và xem biểu đồ phân bổ (Histogram) của 34.000 điểm dữ liệu mẫu của Gene đó, giúp thấy rõ tại sao Mean và Std lại có giá trị như vậy.

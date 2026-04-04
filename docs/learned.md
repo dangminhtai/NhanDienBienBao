@@ -72,6 +72,10 @@
 - **Mô phỏng 2D cho Không gian Đa chiều**: Vì con người không thể nhìn thấy không gian 256 chiều, việc sử dụng các "Bản đồ khái niệm" (Conceptual Maps) 2D là một kỹ thuật sư phạm hiệu quả. Bằng cách đặt kết quả hiện tại vào tâm điểm giữa các "Lãnh thổ" (Clusters), chúng ta giải thích được một cách trực quan khái niệm "Decision Boundary" (Siêu mặt phẳng) mà không cần đi sâu vào hình học đa chiều phức tạp.
 - **Top 5 Confidence**: Việc hiển thị top 5 độ tin cậy giúp người dùng "mở hộp đen" quá trình suy nghĩ của AI, cho thấy nó không chỉ đưa ra 1 kết quả duy nhất mà thực sự đang cân nhắc giữa nhiều phương án khác nhau.
 
+## Xử lý Lỗi và Dự phòng (Robustness & Fallbacks)
+- **Tính năng không bắt buộc (Optional Features)**: Khi làm việc với các thư viện như Scikit-Learn, không phải model nào cũng hỗ trợ tất cả các phương thức (ví dụ: `predict_proba` chỉ có khi bật `probability=True`). Cần luôn có cơ chế kiểm tra `hasattr` và giải pháp dự phòng (Fallback) như dùng `decision_function` kết hợp với `Softmax` để đảm bảo UI không bị crash.
+- **Khởi tạo Biến cục bộ**: Luôn khởi tạo các biến quan trọng với giá trị mặc định ở đầu hàm để tránh lỗi `UnboundLocalError` khi logic rẽ nhánh hoặc gặp ngoại lệ.
+
 ## Giải thích Tính thời điểm của Dữ liệu (Temporal Explanation)
 - **Train vs Inference**: Khi trực quan hóa các phép toán thống kê (như StandardScaler), việc làm rõ nguồn gốc của các tham số ($\mu, \sigma$) là cực kỳ quan trọng. Cần nhấn mạnh rằng chúng có nguồn gốc từ **Tập huấn luyện (Training Set)** chứ không phải tính toán tức thời trên dữ liệu mới. Điều này giúp người dùng hiểu rõ khái niệm "Tri thức đã học" (Learned Knowledge) trong AI.
 
