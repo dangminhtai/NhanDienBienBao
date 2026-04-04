@@ -181,20 +181,23 @@ def render_video_detect_view(cnn_extractor, rec_scaler, svm_model, class_names, 
 
                 if found_signs:
                     st.subheader("📋 Các biển báo đã phát hiện:")
-                    cols = st.columns(4)
-                    for i, sign in enumerate(found_signs[:12]):
-                        with cols[i % 4]:
-                            # Hiển thị ảnh cắt từ video và ảnh gốc từ dataset để so sánh
-                            col_a, col_b = st.columns(2)
-                            with col_a:
-                                st.image(sign['roi'], caption="Cắt từ Video", use_container_width=True)
-                            with col_b:
-                                meta_path = os.path.join(current_dir, "dataset", "Meta", f"{sign['id']}.png")
-                                if os.path.exists(meta_path):
-                                     st.image(meta_path, caption="Mẫu Dataset", use_container_width=True)
-                            
-                            st.write(f"**{sign['label']}**")
-                            st.caption(f"Frame: {sign['frame']} | Tin cậy: {sign['conf']:.1f}%")
+                    # Sử dụng 2 cột lớn để hiển thị thẻ so sánh (Comparison Cards) nhằm giúp anh quan sát rõ hơn
+                    cols = st.columns(2)
+                    for i, sign in enumerate(found_signs):
+                        with cols[i % 2]:
+                            with st.container(border=True):
+                                st.markdown(f"#### 📍 {sign['label']}")
+                                col_a, col_b = st.columns(2)
+                                with col_a:
+                                    st.image(sign['roi'], caption="🖼️ Ảnh cắt từ Video", use_container_width=True)
+                                with col_b:
+                                    meta_path = os.path.join(current_dir, "dataset", "Meta", f"{sign['id']}.png")
+                                    if os.path.exists(meta_path):
+                                         st.image(meta_path, caption="📘 Mẫu từ Dataset", use_container_width=True)
+                                    else:
+                                         st.warning("Không tìm thấy mẫu")
+                                
+                                st.caption(f"**Khung hình:** {sign['frame']} | **Độ tin cậy:** {sign['conf']:.1f}%")
                 else:
                     st.info("Không phát hiện được biển báo nào trong video này với tham số hiện tại.")
 
