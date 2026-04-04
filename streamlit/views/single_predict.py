@@ -59,14 +59,14 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
         
         result_name = class_names.get(prediction_id, "Không xác định")
 
-        # Hiển thị thẻ kết quả Premium
-        st.markdown(f"""
-            <div class="prediction-card">
-                <div class="result-title">KẾT QUẢ PHÂN TÍCH HYBRID</div>
-                <div class="result-name">{result_name}</div>
-                <div class="label-id">NHÃN: #{prediction_id} | ĐỘ TIN CẬY: {confidence:.2f}%</div>
-            </div>
-        """, unsafe_allow_html=True)
+        # Hiển thị kết quả (Đã chuyển xuống Bước 4.4 của phần Giải phẫu để tăng tính minh bạch)
+        # st.markdown(f"""
+        #     <div class="prediction-card">
+        #         <div class="result-title">KẾT QUẢ PHÂN TÍCH HYBRID</div>
+        #         <div class="result-name">{result_name}</div>
+        #         <div class="label-id">NHÃN: #{prediction_id} | ĐỘ TIN CẬY: {confidence:.2f}%</div>
+        #     </div>
+        # """, unsafe_allow_html=True)
         
         st.markdown("---")
         st.markdown("### 🖼️ Giải Phẫu Trực Quan Hệ Thống")
