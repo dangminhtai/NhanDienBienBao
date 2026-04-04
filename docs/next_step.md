@@ -60,3 +60,9 @@
 
 20. **[UI004] Trực quan hóa Phép chuẩn hóa (Standardization Viz):** 
     - Bổ sung một mô hình đồ họa (ví dụ: Biểu đồ phân phối Gauss) để người dùng thấy rõ dữ liệu bị co giãn thế nào khi đi từ CNN qua StandardScaler trước khi vào SVM.
+
+21. **[AI005] Trực quan hóa Siêu mặt phẳng SVM (SVM Decision Boundary):** 
+    - Trình diễn cách SVM sử dụng bộ mã 256 chiều đã chuẩn hóa để vạch ra các "Siêu mặt phẳng" phân tách các loại biển báo, giúp người dùng hiểu tại sao một biển báo lại được gán cho một nhãn cụ thể.
+
+22. **[UI005] Khám phá Phân bổ (Distribution Explorer):** 
+    - Cho phép người chọn 1 Gene và xem biểu đồ phân bổ (Histogram) của 34.000 điểm dữ liệu mẫu của Gene đó, giúp thấy rõ tại sao Mean và Std lại có giá trị như vậy.

@@ -54,6 +54,9 @@
 - **Cân bằng giữa Chi tiết và Tóm tắt**: Đối với các phần lặp lại của thuật toán (như Conv Block 2), việc sử dụng chế độ "Trực quan nhanh" (Quick View) giúp người dùng nắm bắt được sự thay đổi của dữ liệu (từ 14x14 xuống 5x5) mà không bị choáng ngợp bởi các phép toán lặp lại. Điều này giúp duy trì nhịp độ trải nghiệm (UX flow) của ứng dụng.
 - **Tối ưu hóa Trích xuất (Feature Map Extraction)**: Việc sử dụng một mô hình Multi-output trong Keras để trích xuất toàn bộ Feature Maps trong một lần `predict` duy nhất giúp tăng hiệu năng đáng kể so với việc chạy `predict` cho từng lớp riêng lẻ.
 
+## Kết nối Mô hình (Model Interoperability)
+- **Cầu nối CNN ➡️ SVM**: Trong các hệ thống lai ghép (Hybrid), việc trực quan hóa bước trung gian (như Standardization) là cực kỳ quan trọng để người dùng thấy được sự chuyển giao dữ liệu. Việc so sánh "Trước" (CNN Output) và "Sau" (SVM Input) giúp giải thích tại sao kết quả của CNN không thể đưa thẳng vào SVM mà cần một "bộ lọc" trung gian để đảm bảo tính công bằng cho các đặc trưng.
+
 ## Giải mã Phép nén Dữ liệu (Dense Layer Explainability)
 - **Truy xuất Trọng số (Weight Introspection)**: Việc chỉ hiển thị kết quả đầu ra là chưa đủ để giải thích "Hộp đen". Cần phải truy xuất trực tiếp các trọng số (Weights) của lớp Dense để cho người dùng thấy cơ chế "Weighted Sum" (Tổng có trọng số). Mỗi đầu ra (Gene) thực chất là một "ý kiến" của 1.600 đầu vào thô, trong đó một số đầu vào có tiếng nói lớn hơn những người khác dựa trên giá trị trọng số của chúng.
 - **Biểu đồ Nhiệt 2D cho Vector 1D**: Khi trực quan hóa 1.600 trọng số, việc reshape về dạng ma trận 2D (ví dụ: 25x64) giúp mắt người dễ dàng nhận diện các mẫu (patterns) phân bổ hơn là xem một dải vạch dài vô tận.
@@ -64,6 +67,9 @@
 ## Ngôn ngữ Biểu đạt sư phạm (Pedagogical Analogies)
 - **Cơ chế 'Bầu cử' (Voting Analogy)**: Việc giải thích lớp Dense thông qua hình ảnh "Cử tri" (flatten_out) và "Đại biểu" (dense_out) giúp người dùng không có nền tảng toán học vẫn nắm bắt được bản chất của phép Nhân ma trận (Matrix Multiplication). 
 - **Trực quan hóa 'Sự đóng góp' (Contribution Map)**: Thay vì chỉ cho thấy Trọng số ($W$), việc cho thấy kết quả của phép nhân $X \times W$ (Sự đóng góp thực tế) giúp trả lời câu hỏi: "Tại sao nơ-ron này lại ra con số này?".
+
+## Giải thích Tính thời điểm của Dữ liệu (Temporal Explanation)
+- **Train vs Inference**: Khi trực quan hóa các phép toán thống kê (như StandardScaler), việc làm rõ nguồn gốc của các tham số ($\mu, \sigma$) là cực kỳ quan trọng. Cần nhấn mạnh rằng chúng có nguồn gốc từ **Tập huấn luyện (Training Set)** chứ không phải tính toán tức thời trên dữ liệu mới. Điều này giúp người dùng hiểu rõ khái niệm "Tri thức đã học" (Learned Knowledge) trong AI.
 
 ## Giải mã Phép biến đổi Dữ liệu (Data Transformation Clarity)
 - **Flatten ➡️ Dense**: Việc tách biệt rõ ràng bước "Duỗi thẳng" (Flatten) và bước "Nén đặc trưng" (Dense) giúp người dùng thấy rõ quá trình chuyển đổi từ dạng dữ liệu không gian (Spatial - 3D) sang dạng dữ liệu định danh (Identifying - 1D Vector). Biểu đồ vạch (Plot) cho Flatten và biểu đồ cột (Bar chart) cho Dense tạo ra sự tương phản thị giác cần thiết để phân biệt hai trạng thái dữ liệu này.
