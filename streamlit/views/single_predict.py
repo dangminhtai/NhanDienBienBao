@@ -13,6 +13,7 @@ from components.anatomy.step2_dropout import render_dropout_layer
 from components.anatomy.step2_block_2 import render_block2_quickview
 from components.anatomy.step2_juicer import render_dense_juicer
 from components.anatomy.step3_scaler import render_step3_standardization
+from components.anatomy.step4_svm import render_svm_classification
 
 def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_model, class_names, current_dir):
     """Render giao diện Dự đoán nhanh (Single Sign) - SOLID Edition."""
@@ -104,6 +105,11 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                 # --- BƯỚC 3: CHUẨN HÓA (Standardization) ---
                 # Nối tiếp từ CNN sang SVM
                 render_step3_standardization(fmaps_cache['deep_features'], rec_scaler, current_dir)
+                
+                # --- BƯỚC 4: RA QUYẾT ĐỊNH (Phân loại SVM) ---
+                # Dữ liệu 256 đặc trưng đã chuẩn hóa đi vào bộ não phán quyết
+                scaled_features = rec_scaler.transform(fmaps_cache['deep_features'])
+                render_svm_classification(svm_model, scaled_features, class_names, prediction_id, current_dir)
         else:
             st.warning("⚠️ Hệ thống vừa cập nhật tính năng Turbo Cache. Vui lòng nhấn nút **[🔍 BẮT ĐẦU NHẬN DIỆN]** phía trên một lần nữa để kích hoạt bộ nhớ đệm siêu tốc!")
 

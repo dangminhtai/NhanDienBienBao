@@ -64,5 +64,8 @@
 21. **[AI005] Trực quan hóa Siêu mặt phẳng SVM (SVM Decision Boundary):** 
     - Trình diễn cách SVM sử dụng bộ mã 256 chiều đã chuẩn hóa để vạch ra các "Siêu mặt phẳng" phân tách các loại biển báo, giúp người dùng hiểu tại sao một biển báo lại được gán cho một nhãn cụ thể.
 
+22. **[AI006] Chiếu Tọa độ Thực (Real-time t-SNE Projection):** 
+    - Xây dựng một module chạy ngầm để tính toán tọa độ t-SNE/UMAP thực tế cho vector 256 chiều, giúp người dùng thấy vị trí chính xác của ảnh mình vừa tải lên trong mối tương quan với toàn bộ 34.000 điểm dữ liệu huấn luyện.
+
 22. **[UI005] Khám phá Phân bổ (Distribution Explorer):** 
     - Cho phép người chọn 1 Gene và xem biểu đồ phân bổ (Histogram) của 34.000 điểm dữ liệu mẫu của Gene đó, giúp thấy rõ tại sao Mean và Std lại có giá trị như vậy.
