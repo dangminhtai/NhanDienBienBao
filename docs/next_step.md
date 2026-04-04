@@ -57,3 +57,6 @@
 
 19. **[AI004] Thử nghiệm Kích hoạt Nơ-ron (Neuron Probing):** 
     - Cho phép người dùng "vẽ" hoặc sửa đổi trực tiếp các điểm trên bản đồ 5x5 để xem các Gene (256 biến) thay đổi thế nào trong thời gian thực, giúp hiểu rõ mối quan hệ nhân quả (Causality) trong mạng CNN.
+
+20. **[UI004] Trực quan hóa Phép chuẩn hóa (Standardization Viz):** 
+    - Bổ sung một mô hình đồ họa (ví dụ: Biểu đồ phân phối Gauss) để người dùng thấy rõ dữ liệu bị co giãn thế nào khi đi từ CNN qua StandardScaler trước khi vào SVM.

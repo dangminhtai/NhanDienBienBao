@@ -58,6 +58,9 @@
 - **Truy xuất Trọng số (Weight Introspection)**: Việc chỉ hiển thị kết quả đầu ra là chưa đủ để giải thích "Hộp đen". Cần phải truy xuất trực tiếp các trọng số (Weights) của lớp Dense để cho người dùng thấy cơ chế "Weighted Sum" (Tổng có trọng số). Mỗi đầu ra (Gene) thực chất là một "ý kiến" của 1.600 đầu vào thô, trong đó một số đầu vào có tiếng nói lớn hơn những người khác dựa trên giá trị trọng số của chúng.
 - **Biểu đồ Nhiệt 2D cho Vector 1D**: Khi trực quan hóa 1.600 trọng số, việc reshape về dạng ma trận 2D (ví dụ: 25x64) giúp mắt người dễ dàng nhận diện các mẫu (patterns) phân bổ hơn là xem một dải vạch dài vô tận.
 
+## Tài liệu hóa Quy trình (Step-by-step Documentation)
+- **Cầu nối Thực tiễn và Lý thuyết**: Việc viết tài liệu từng bước (Step-by-step) bám sát vào từng dòng code (như StandardScaler trong GTSRB_(SVM_+_CNN).py) giúp người đọc không bị lạc giữa rừng lý thuyết. Việc sử dụng các phép ẩn dụ (như "Người trọng tài") thay cho giải thích kỹ thuật khô khan giúp gắn kết kiến thức lâu hơn.
+
 ## Ngôn ngữ Biểu đạt sư phạm (Pedagogical Analogies)
 - **Cơ chế 'Bầu cử' (Voting Analogy)**: Việc giải thích lớp Dense thông qua hình ảnh "Cử tri" (flatten_out) và "Đại biểu" (dense_out) giúp người dùng không có nền tảng toán học vẫn nắm bắt được bản chất của phép Nhân ma trận (Matrix Multiplication). 
 - **Trực quan hóa 'Sự đóng góp' (Contribution Map)**: Thay vì chỉ cho thấy Trọng số ($W$), việc cho thấy kết quả của phép nhân $X \times W$ (Sự đóng góp thực tế) giúp trả lời câu hỏi: "Tại sao nơ-ron này lại ra con số này?".
