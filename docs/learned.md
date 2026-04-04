@@ -89,6 +89,10 @@
 - **Tích hợp LaTeX**: Sử dụng biểu thức toán học LaTeX trực tiếp dưới các biểu đồ giúp gắn kết giữa lý thuyết hàn lâm và thực thi thực tế, tạo ra sự tin tưởng tuyệt đối vào kết quả của AI.
 - **Tọa độ Biến thiên (Dynamic Coordinates)**: Việc ánh xạ vị trí "Ngôi sao đỏ" (Ảnh hiện tại) từ vector 256 chiều xuống 2 chiều dựa trên các Gene quan trọng nhất giúp giao diện "sống" và thay đổi theo từng tấm ảnh, xóa bỏ cảm giác "hard-code".
 
+## Sư phạm hóa Khái niệm Trừu tượng (Pedagogical Storytelling)
+- **Ẩn dụ "Nhấc bổng" (Lifting Metaphor)**: Đối với các khái niệm khó như Kernel Trick, việc sử dụng hình ảnh 1D (bế tắc) so sánh với 2D (giải quyết) là cách hiệu quả nhất để người dùng nắm bắt bản chất mà không cần hiểu toán học phức tạp. 
+- **Nhân hóa Thuật toán (Kernel Personas)**: Việc đặt tên cho các Kernel bằng những hình ảnh quen thuộc (Cây thước, Vùng phát sóng, Đường uốn lượn) giúp tạo ra các neo tư duy (Mental Models) bền vững cho người học.
+
 ## Giải thích Tính thời điểm của Dữ liệu (Temporal Explanation)
 - **Train vs Inference**: Khi trực quan hóa các phép toán thống kê (như StandardScaler), việc làm rõ nguồn gốc của các tham số ($\mu, \sigma$) là cực kỳ quan trọng. Cần nhấn mạnh rằng chúng có nguồn gốc từ **Tập huấn luyện (Training Set)** chứ không phải tính toán tức thời trên dữ liệu mới. Điều này giúp người dùng hiểu rõ khái niệm "Tri thức đã học" (Learned Knowledge) trong AI.
 

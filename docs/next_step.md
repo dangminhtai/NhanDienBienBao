@@ -79,5 +79,8 @@
 26. **[UI008] Tùy chỉnh Siêu tham số (Interactive Hyperparameter Tuning):** 
     - Cho phép người dùng trượt (Slider) để thay đổi giá trị $C$ hoặc $\gamma$ trên UI và xem ranh giới Kernel trong Step 4.2 co giãn theo thời gian thực, giúp hiểu rõ hiện tượng Bias/Variance.
 
+27. **[UI009] Hoạt họa Bẻ cong Không gian (Space Bending Animation):** 
+    - Phát triển một đoạn hoạt họa (GIF/Lottie) minh họa sống động quá trình các điểm dữ liệu từ 1D được 'nhấc bổng' lên 2D để SVM kẻ ranh giới, giúp tăng tính tương tác và dễ hiểu cho Bước 4.2.
+
 22. **[UI005] Khám phá Phân bổ (Distribution Explorer):** 
     - Cho phép người chọn 1 Gene và xem biểu đồ phân bổ (Histogram) của 34.000 điểm dữ liệu mẫu của Gene đó, giúp thấy rõ tại sao Mean và Std lại có giá trị như vậy.
