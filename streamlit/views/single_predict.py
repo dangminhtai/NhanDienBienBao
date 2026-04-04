@@ -102,11 +102,13 @@ def render_single_predict_view(image, app_mode, cnn_extractor, rec_scaler, svm_m
                 # 2.3: Feature Juicer (Flatten 1.600 -> Dense 256)
                 render_dense_juicer(cnn_extractor, fmaps_cache['flatten_out'], fmaps_cache['deep_features'])
                 
-                # --- BƯỚC 3: CHUẨN HÓA (Standardization) ---
+            # --- BƯỚC 3: CHUẨN HÓA (Standardization) ---
+            with st.expander("📌 Bước 3: Cân bằng Đặc trưng (Standardization)", expanded=False):
                 # Nối tiếp từ CNN sang SVM
                 render_step3_standardization(fmaps_cache['deep_features'], rec_scaler, current_dir)
-                
-                # --- BƯỚC 4: RA QUYẾT ĐỊNH (Phân loại SVM) ---
+            
+            # --- BƯỚC 4: RA QUYẾT ĐỊNH (Phân loại SVM) ---
+            with st.expander("📌 Bước 4: Ra quyết định (Phân loại SVM)", expanded=True):
                 # Dữ liệu 256 đặc trưng đã chuẩn hóa đi vào bộ não phán quyết
                 scaled_features = rec_scaler.transform(fmaps_cache['deep_features'])
                 render_svm_classification(svm_model, scaled_features, class_names, prediction_id, current_dir)
