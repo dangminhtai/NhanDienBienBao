@@ -142,6 +142,14 @@ def extract_all_fmaps(cnn_extractor, image_batch):
         st.error(f"❌ Lỗi khi trích xuất Feature Maps: {str(e)}")
         return None
 
+def normalize_confidence(score, scale=5.0):
+    """
+    Chuẩn hóa điểm SVM (decision_function) sang dải 0-100% bằng hàm Sigmoid.
+    Scale = 5.0 là 'điểm ngọt' cho dải dữ liệu của dự án này.
+    """
+    import numpy as np
+    return (1 / (1 + np.exp(-score / scale))) * 100
+
 def predict_hybrid(image_batch, cnn_extractor, scaler, svm_model):
     """
     Quy trình dự đoán lai ghép:
@@ -150,7 +158,6 @@ def predict_hybrid(image_batch, cnn_extractor, scaler, svm_model):
     3. Phân loại bằng SVM
     """
     # 1. Trích xuất đặc trưng (CNN)
-    # Output của cnn_extractor.predict là (1, 256)
     deep_features = cnn_extractor.predict(image_batch, verbose=0)
     
     # 2. Chuẩn hóa (Scaler)
@@ -160,11 +167,7 @@ def predict_hybrid(image_batch, cnn_extractor, scaler, svm_model):
     prediction = svm_model.predict(scaled_features)[0]
     
     # 4. Chuẩn hóa độ tin cậy sang % (v4.6)
-    # SVM Linear trả về khoảng cách tới siêu mặt phẳng (decision_function)
-    # Ta dùng hàm Sigmoid để nén về dải 0-100%
-    import numpy as np
     score = svm_model.decision_function(scaled_features)[0][prediction]
-    # Dùng hệ số scale=5.0 để dải điểm nhạy hơn
-    confidence = (1 / (1 + np.exp(-score / 5.0))) * 100
+    confidence = normalize_confidence(score)
     
     return prediction, confidence

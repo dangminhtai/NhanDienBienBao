@@ -7,46 +7,46 @@
     "main_title": "🚦 Nhận diện Biển báo Giao thông",
     "math_section": {
         "title": "SƠ ĐỒ HỆ THỐNG",
-        "hybrid_arch_title": "CNN + SVM",
-        "hybrid_arch_desc": "Hệ thống kết hợp **CNN** để trích xuất đặc trưng sâu (256 chiều) và **SVM** để phân loại. Đối với tác vụ phát hiện, chúng tôi sử dụng lọc màu **HSV** kết hợp với **SVM Binary** dựa trên đặc trưng **HOG**."
+        "hybrid_arch_title": "",
+        "hybrid_arch_desc": ""
     },
     "single_predict": {
-        "title": "🔍 Chế độ Dự đoán nhanh (Single Sign)",
+        "title": "Chế độ Dự đoán nhanh (Single Sign)",
         "anatomy_title": "🖼️ Giải Phẫu Trực Quan Hệ Thống",
-        "step1_title": "📌 Bước 1: Tiền xử lý & Tracking Pixel",
-        "step2_title": "📌 Bước 2: X-Quang Hệ thần kinh CNN (Deep Tracking)",
-        "step3_title": "📌 Bước 3: Cân bằng Đặc trưng (Standardization)",
-        "step4_title": "📌 Bước 4: Ra quyết định (Phân loại SVM)",
-        "btn_start": "🔍 BẮT ĐẦU NHẬN DIỆN",
+        "step1_title": "Bước 1: Tiền Xử Lý Hình Ảnh",
+        "step2_title": "Bước 2: Mạng CNN",
+        "step3_title": "Bước 3: Cân bằng Đặc trưng",
+        "step4_title": "Bước 4: Ra quyết định",
+        "btn_start": "BẮT ĐẦU NHẬN DIỆN",
         "loading_msg": "Đang phân tích chuyên sâu (Deep Tracking)...",
-        "upload_label": "📥 Chọn ảnh...",
-        "result_mismatch_warning": "⚠️ Hệ thống vừa cập nhật tính năng Turbo Cache. Vui lòng nhấn nút **[🔍 BẮT ĐẦU NHẬN DIỆN]** phía trên một lần nữa để kích hoạt bộ nhớ đệm siêu tốc!"
+        "upload_label": "Chọn ảnh...",
+        "result_mismatch_warning": "Hệ thống vừa cập nhật, vui lòng bấm nút BẮT ĐẦU NHẬN DIỆN một lần nữa để kích hoạt bộ nhớ đệm siêu tốc!"
     },
     "full_image_detect": {
-        "title": "🔍 Phát hiện & Nhận diện (Full Image)",
+        "title": "Phát hiện & Nhận diện (Full Image)",
         "intro": "Chế độ này cho phép tải lên một ảnh phong cảnh (Scene) chứa nhiều biển báo. Hệ thống sẽ tự động quét và khoanh vùng.",
         "step1_title": "📸 Bước 1: Mổ xẻ chi tiết Toán học từng lớp ảnh (CLAHE)",
-        "step1_math": "#### 📐 Toán học Lõi: Biến đổi Phân bố Tích lũy (CDF) và Giới hạn Kéo dãn",
-        "step2_title": "🧪 Bước 2: Phẫu thuật Tách lớp Màu (HSV Segmentation)",
+        "step1_math": "#### Phân bố Tích lũy (CDF) và Giới hạn Kéo dãn",
+        "step2_title": "📸 Bước 2: Phẫu thuật Tách lớp Màu (HSV Segmentation)",
         "step2_desc": "Sử dụng Gradient màu sắc để tạo mặt nạ nhị phân.",
-        "step3_title": "🧵 Bước 3: Morphology & Contour Analysis",
+        "step3_title": "📸 Bước 3: Morphology & Contour Analysis",
         "step3_desc": "Làm sạch nhiễu và tìm các khối hình học tiềm năng.",
-        "step4_title": "🧠 Bước 4: SVM Binary Detector (HOG Features)",
+        "step4_title": "📸 Bước 4: SVM Binary Detector (HOG Features)",
         "step4_desc": "Lọc các vùng ứng viên để giữ lại biển báo thật.",
-        "step5_title": "🏁 Bước 5: Hybrid Recognition & NMS",
+        "step5_title": "📸 Bước 5: Hybrid Recognition & NMS",
         "step5_desc": "CNN trích xuất đặc trưng và SVM định danh biển báo."
     },
     "video_detect": {
-        "title": "🎥 Phát hiện từ Video (Video Mode) - Beta",
+        "title": "Phát hiện từ Video (Video Mode) - Beta",
         "intro": "Phân tích luồng video và phát hiện biển báo theo thời gian thực (Beta).",
-        "roi_title": "📋 Các biển báo đã phát hiện:",
-        "btn_start": "▶️ BẮT ĐẦU XỬ LÝ VIDEO",
+        "roi_title": "Các biển báo đã phát hiện:",
+        "btn_start": "BẮT ĐẦU XỬ LÝ VIDEO",
         "loading_msg": "Đang phân tích video... Vui lòng đợi trong giây lát."
     },
     "batch_process": {
-        "title": "📂 Quét Thư mục (Batch Mode)",
+        "title": "Quét Thư mục (Batch Mode)",
         "intro": "Xử lý hàng loạt ảnh trong một thư mục và xuất báo cáo kết quả.",
-        "btn_start": "🚀 BẮT ĐẦU QUÉT THƯ MỤC",
+        "btn_start": "BẮT ĐẦU QUÉT THƯ MỤC",
         "loading_msg": "Đang quét thư mục..."
     }
 }

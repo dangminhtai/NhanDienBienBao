@@ -1,50 +1,89 @@
-# Hệ thống Nhận diện và Phát hiện Biển báo Giao thông v4.0 (Full Hybrid)
+# TRAFFIC SIGN RECOGNITION SYSTEM (Hybrid v5.0 Scientific Edition)
 
-Dự án này triển khai một hệ thống AI tiên tiến kết hợp giữa **Học sâu (Deep Learning)** và **Học máy truyền thống (SVM)** để giải quyết cả hai tác vụ: **Phát hiện (Detection)** và **Nhận diện (Recognition)** biển báo giao thông.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
+![Framework](https://img.shields.io/badge/framework-Streamlit%20%7C%20TensorFlow-orange.svg)
 
-## 🌟 Tính năng chính
-- **Chế độ Dự đoán nhanh**: Tải lên ảnh biển báo đã cắt để nhận diện ngay lập tức với độ chính xác cao.
-- **Chế độ Phát hiện & Nhận diện**: Tự động tìm kiếm nhiều biển báo bên trong một bức ảnh phong cảnh (Toàn cảnh) và định danh từng biển báo.
-- **Chế độ Phát hiện từ Video**: Xử lý luồng video (.mp4) theo thời gian thực, tự động khoanh vùng và nhận diện biển báo khi xe đang di chuyển.
-- **Tùy biến Nội dung (CMS)**: Toàn bộ văn bản, tiêu đề và hướng dẫn trên giao diện được quản lý tập trung qua file JSON, giúp người dùng dễ dàng chỉnh sửa mà không cần can thiệp vào mã nguồn.
-- **Minh bạch Toán học**: Giải trình chi tiết quy trình trích xuất đặc trưng sâu (Deep Features) và cơ chế phân loại Maximum Margin của SVM.
+## 📖 Tổng quan (Abstract)
+Hệ thống này đại diện cho một bước tiến trong việc kết hợp các phương pháp xử lý ảnh thị giác máy tính truyền thống và mạng nơ-ron tích chập (CNN). Mục tiêu cốt lõi là giải quyết hai thách thức kỹ thuật lớn trong lĩnh vực GTSRB (German Traffic Sign Recognition Benchmark):
+1. **Detection**: Xác định vị trí các vùng ứng viên trong môi trường thực tế phức tạp.
+2. **Recognition**: Phân loại chính xác 43 lớp biển báo với độ tin cậy được định lượng hóa theo phương pháp Maximum Margin (SVM).
 
-## 🏗️ Kiến trúc Hệ thống (Hybrid v4.0)
+---
 
-### 1. Quy trình Phát hiện (Detection)
-Sử dụng phương pháp quét vùng ứng viên dựa trên màu sắc và hình dạng:
-- **Tiền xử lý**: Lọc màu HSV (Đỏ/Xanh) + Xử lý hình thái học (Morphology).
-- **Trích xuất đặc trưng**: HOG (Histogram of Oriented Gradients) với 324 đặc trưng.
-- **Phân loại**: SVM Binary Classifier để xác định vùng đó có phải biển báo hay không.
-- **Hậu xử lý**: NMS (Non-Maximum Suppression) để làm sạch các vùng chồng lấn.
+## 🔬 Kiến trúc Kỹ thuật (Technical Architecture)
 
-### 2. Quy trình Nhận diện (Recognition)
-Sử dụng sức mạnh của CNN để hiểu cấu trúc ảnh tinh vi:
-- **Feature Extractor**: CNN (Keras) trích xuất 256 đặc trưng sâu từ ảnh 32x32.
-- **Classifier**: Linear SVM phân loại 43 nhóm biển báo (Độ tin cậy dựa trên Decision Function).
+Hệ thống hoạt động theo mô hình **Pipeline Phễu Lọc (Funnel Filter Pipeline)** 6 giai đoạn:
 
-## 🚀 Hướng dẫn Chạy ứng dụng
+### 1. Adaptive Pre-processing
+- **CLAHE (Contrast Limited Adaptive Histogram Equalization)**: Thực hiện trong không gian màu **LAB** để tối ưu hóa dynamic range mà không làm sai lệch màu sắc tự nhiên.
+- **HSV Space Mapping**: Tách biệt kênh Hue để giảm thiểu nhạy cảm với cường độ ánh sáng biến thiên.
 
-### 1. Cài đặt môi trường
-Đảm bảo bạn đã cài đặt Python 3.10+ và các thư viện cần thiết:
+### 2. Candidate Proposal Generation
+Sử dụng bộ lọc màu đa kênh kết hợp hình thái học toán học:
+- **Masking**: $\text{Mask}_{final} = \text{Mask}_{Red} \cup \text{Mask}_{Blue} \cup \text{Mask}_{Yellow}$
+- **Morphology**: Áp dụng $Closing(9,9)$ để lấp đầy vùng lõi và $Opening(3,3)$ để triệt tiêu nhiễu Gauss.
+
+### 3. Structural Analysis & Filtering
+- **Geometry Logic**: Kiểm tra tỷ lệ khung hình ($0.6 < AR < 1.4$) và độ đặc (Solidity $> 0.3$).
+- **Frequency Analysis**: Sử dụng phương sai **Laplacian** để xác định độ nét (Focus check), đảm bảo chỉ xử lý các ROI có độ chi tiết cao ($Var > 40$).
+
+### 4. Hybrid Feature Extraction (Dual-Path)
+- **Pathway A (Deep Features)**: Sử dụng CNN pre-trained trên tập GTSRB để trích xuất vector đặc trưng 256 chiều từ lớp cổ chai (Bottleneck layer).
+- **Pathway B (Gradient Features)**: Trích xuất **HOG (Histogram of Oriented Gradients)** (9 orientations, 8x8 pixels/cell) tạo thành vector 324 chiều mô tả cấu trúc hình học.
+
+### 5. Multi-Stage Classification
+- **Stage 1 (Detection Verification)**: Sử dụng **Linear SVM** để phân loại nhị phân (Sign vs. Non-sign) dựa trên HOG features.
+- **Stage 2 (Fine Grained Recognition)**: Sử dụng **SVM với Kernel RBF** để phân loại đa lớp trên Deep Features từ CNN.
+
+### 6. Post-processing (Clustering)
+- **NMS (Non-Maximum Suppression)**: Áp dụng thuật toán triệt tiêu cực đại cục bộ với ngưỡng IoU tùy chỉnh để lọc các box trùng lặp.
+
+---
+
+## 🛠️ Cấu trúc Dự án (Project Structure)
+
+```bash
+├── streamlit/
+│   ├── app.py                      # Dashboard Entry Point
+│   ├── src/
+│   │   ├── detector.py             # Logic phát hiện (HSV + HOG + SVM)
+│   │   ├── model_handler.py        # Pipeline CNN-SVM Integration
+│   │   └── content_manager.py      # Hệ thống CMS Hot-reload (st.cache_data)
+│   ├── views/                      # Các module giao diện (Single, Full, Video)
+│   ├── components/                 # Các component "AI Anatomy" trực quan hóa
+│   ├── config/                     # centralized content management (.json)
+│   └── models/                     # Lưu trữ trọng số .h5 và .pkl
+├── docs/                           # Kho lưu trữ tri thức toán học và kỹ thuật
+└── README.md                       # Tài liệu hệ thống
+```
+
+---
+
+## 🚀 Cài đặt & Vận hành
+
+### 1. Chuẩn bị môi trường
+Yêu cầu Python 3.10+. Chạy lệnh sau để cài đặt dependencies:
+
 ```bash
 pip install streamlit tensorflow opencv-python scikit-learn scikit-image joblib pandas numpy matplotlib
 ```
 
-### 2. Chạy giao diện Streamlit
-Di chuyển vào thư mục `streamlit/` và thực thi:
+### 2. Khởi chạy Dashboard
+Hệ thống cung cấp giao diện tương tác cao cấp:
+
 ```bash
-streamlit run app.py
+streamlit run streamlit/app.py
 ```
 
-## 📂 Cấu trúc dự án
-- `streamlit/app.py`: Giao diện chính của ứng dụng.
-- `streamlit/src/detector.py`: Logic phát hiện biển báo toàn cảnh.
-- `streamlit/src/model_handler.py`: Quản lý nạp và dự đoán mô hình.
-- `streamlit/models/`: Chứa các file mô hình `.h5` và `.pkl`.
-- `streamlit/config/content.json`: File cấu hình toàn bộ văn bản hiển thị trên UI.
-- `streamlit/src/content_manager.py`: Module quản lý nạp nội dung UI linh hoạt.
-- `docs/`: Tài liệu hướng dẫn, bài học kinh nghiệm và điểm yếu của hệ thống.
+---
+
+## 📂 Tài liệu Phụ trợ (Extended Documentation)
+Để hiểu sâu hơn về toán học và mã nguồn, tham khảo:
+- [Kiến trúc Anatomy](file:///f:/X-FILE/Code_UNI/Python/Math%20for%20AI/CuoiKy/NhanDienBienBao/docs/demystify_pipeline.md): Bóc tách chi tiết từng lớp CNN và SVM.
+- [Phân tích Overfitting](file:///f:/X-FILE/Code_UNI/Python/Math%20for%20AI/CuoiKy/NhanDienBienBao/docs/diagnosis_overfitting.md): Báo cáo kỹ thuật về quá trình huấn luyện.
+- [Kế hoạch phát triển](file:///f:/X-FILE/Code_UNI/Python/Math%20for%20AI/CuoiKy/NhanDienBienBao/docs/next_step.md): Lộ trình v6.0 cho YOLO Lite và Multi-threading.
 
 ---
-**Phát triển bởi chuyên gia AI - Phiên bản v4.0 Full Integration**
+**© 2026 - Senior AI Research Project**  
+*Mọi thay đổi văn bản vui lòng thực hiện tại `streamlit/config/content.json`.*

@@ -172,7 +172,8 @@ class TrafficSignDetector:
                                     score = self.model.decision_function(features_scaled)[0]
                                     if score > 0.0:
                                         stats['svm_pass'] += 1
-                                        all_candidates.append(((x, y, w_box, h_box), score, s, v))
+                                        confidence = self.normalize_confidence(score)
+                                        all_candidates.append(((x, y, w_box, h_box), confidence, s, v))
 
             if not all_candidates:
                 return ([], None, stats) if return_mask else ([], stats)
@@ -223,6 +224,10 @@ class TrafficSignDetector:
         mask = self._preprocess_mask(mask)
         return self._get_raw_candidates_from_mask(image_bgr, mask, min_size, min_ratio, max_ratio, min_solidity, min_laplacian)
 
+    def normalize_confidence(self, score, scale=5.0):
+        """Standard sigmoid normalization."""
+        return (1 / (1 + np.exp(-score / scale))) * 100
+
     def _get_raw_candidates_from_mask(self, image_bgr, mask, min_size, min_ratio=0.6, max_ratio=1.4, min_solidity=0.3, min_laplacian=40):
         """Trích xuất raw candidates từ một binary mask với các bộ lọc v5.0."""
         # Áp dụng CLAHE một lần nữa cho ROI để đồng nhất với lúc train (tùy chọn)
@@ -268,5 +273,6 @@ class TrafficSignDetector:
                 if self.model.predict(features_scaled)[0] == 1:
                     score = self.model.decision_function(features_scaled)[0]
                     if score > 0.0:
-                        candidates.append(((x, y, w_box, h_box), score))
+                        confidence = self.normalize_confidence(score)
+                        candidates.append(((x, y, w_box, h_box), confidence))
         return candidates

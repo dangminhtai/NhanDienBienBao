@@ -6,9 +6,15 @@ ui = get_ui()
 def render_math_section(app_mode):
     # --- PHẦN MINH BẠCH TOÁN HỌC ---
     st.divider()
-    with st.expander(ui.get("math_section.title", "📊 CƠ SỞ TOÁN HỌC VÀ QUY TRÌNH HỆ THỐNG")):
-        st.subheader(ui.get("math_section.hybrid_arch_title", "1. Kiến trúc Hybrid v4.0"))
-        st.write(ui.get("math_section.hybrid_arch_desc", "Hệ thống kết hợp CNN và SVM."))
+    title = ui.get("math_section.title", "SƠ ĐỒ HỆ THỐNG")
+    with st.expander(title if title else "Sơ đồ Hệ thống"):
+        sub_title = ui.get("math_section.hybrid_arch_title", "")
+        if sub_title:
+            st.subheader(sub_title)
+            
+        desc = ui.get("math_section.hybrid_arch_desc", "")
+        if desc:
+            st.write(desc)
 
         if app_mode in ["Phát hiện & Nhận diện (Full Image)", "Quét Thư mục (Batch Mode)"]:
             st.graphviz_chart("""

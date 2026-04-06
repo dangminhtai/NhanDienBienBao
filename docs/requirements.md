@@ -13,6 +13,8 @@
 | REQ009 | Sơ đồ Tổng quan | Hiển thị Bản đồ Dòng chảy (map2.md) trực tiếp trên giao diện UI. | Hoàn thành |
 | REQ010 | Phát hiện từ Video | Xử lý và nhận diện biển báo từ video nguồn (.mp4, .avi). | Hoàn thành (Beta) |
 | REQ011 | Quản lý Nội dung UI | Tách biệt toàn bộ văn bản giao diện vào file config/content.json. | Hoàn thành |
+| REQ012 | Tối giản UI | Loại bỏ văn bản thừa và fallback trong phần sơ đồ hệ thống. | Hoàn thành |
+| REQ013 | Rút gọn Tiêu đề | Chuyển "📌 Bước 1: Tiền Xử Lý Hình Ảnh (32x32 Pixel & Ma Trận ndarray)" thành "Bước 1: Tiền Xử Lý Hình Ảnh". | Hoàn thành |
 
 ## Quy trình triển khai Step-by-step
 1. **Thiết lập môi trường**: Cài đặt dependencies từ `requirements.txt`.

@@ -14,7 +14,7 @@ ui = get_ui()
 from components.ui_helpers import draw_vietnamese_text
 
 @st.cache_resource
-def get_cached_detector(current_dir):
+def get_cached_detector(current_dir, version="1.0.1"):
     return TrafficSignDetector(
         model_path=os.path.join(current_dir, "models", "detect_model.pkl"),
         scaler_path=os.path.join(current_dir, "models", "detect_scaler.pkl")
@@ -23,7 +23,7 @@ def get_cached_detector(current_dir):
 def render_full_image_view(image, class_names, current_dir, det_params, auto_tune, show_debug, cnn_extractor, rec_scaler, svm_model):
     det_model, det_scaler = load_detection_system()
     if det_model is not None and det_scaler is not None:
-        detector = get_cached_detector(current_dir)
+        detector = get_cached_detector(current_dir, version="1.0.1")
         # --- TRỰC QUAN HÓA BƯỚC 1 (CLAHE) ---
         st.write(f"### {ui.get('full_image_detect.step1_title', '📸 Bước 1')}")
         img_bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
@@ -323,9 +323,10 @@ Bằng thuật toán CLAHE lưới 8x8, máy sẽ tính **Hàm phân bố Tích 
                 
                 feat_scaled = detector.scaler.transform(hog_feature.reshape(1, -1))
                 prediction = detector.model.predict(feat_scaled)[0]
-                confidence = detector.model.decision_function(feat_scaled)[0]
+                raw_score = detector.model.decision_function(feat_scaled)[0]
+                confidence = detector.normalize_confidence(raw_score)
                 
-                score_text = f"{confidence:.1f}"
+                score_text = f"{confidence:.1f}%"
                 text_y = max(y - 5, 15)
                 
                 if prediction == 1:
@@ -333,7 +334,7 @@ Bằng thuật toán CLAHE lưới 8x8, máy sẽ tính **Hàm phân bố Tích 
                     cv2.putText(svm_passed_img, score_text, (x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                     cv2.rectangle(svm_rejected_img, (x, y), (x + w_box, y + h_box), (0, 255, 0), 2)
                     cv2.putText(svm_rejected_img, score_text, (x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                    svm_passed.append({'img': roi_rgb, 'hog_img': hog_image_disp, 'score': score_text, 'rect': (x, y, w_box, h_box), 'conf': confidence})
+                    svm_passed.append({'img': roi_rgb, 'hog_img': hog_image_disp, 'score': score_text, 'rect': (x, y, w_box, h_box), 'conf': raw_score})
                 else:
                     cv2.rectangle(svm_rejected_img, (x, y), (x + w_box, y + h_box), (0, 0, 255), 2)
                     cv2.putText(svm_rejected_img, score_text, (x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
